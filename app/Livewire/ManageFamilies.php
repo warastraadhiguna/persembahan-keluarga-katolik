@@ -6,6 +6,7 @@ use App\Exports\FamilyTemplateExport;
 use App\Imports\FamiliesImport;
 use App\Models\Family;
 use App\Models\Lingkungan;
+use App\Models\PrintSetting;
 use App\Models\Wilayah;
 use App\Services\AuditLogger;
 use Illuminate\Validation\Rule;
@@ -54,6 +55,42 @@ class ManageFamilies extends Component
     public string $printPaperHeight = '297';
     public string $printMargin = '10';
     public string $printGap = '0';
+
+    private const PRINT_SETTING_FIELDS = [
+        'printRows'         => 'rows',
+        'printCols'         => 'cols',
+        'printStart'        => 'start',
+        'printPaper'        => 'paper',
+        'printPaperWidth'   => 'paper_width',
+        'printPaperHeight'  => 'paper_height',
+        'printMargin'       => 'margin',
+        'printGap'          => 'gap',
+    ];
+
+    public function mount(): void
+    {
+        $setting = PrintSetting::current();
+
+        $this->printRows         = $setting->rows;
+        $this->printCols         = $setting->cols;
+        $this->printStart        = $setting->start;
+        $this->printPaper        = $setting->paper;
+        $this->printPaperWidth   = (string) $setting->paper_width;
+        $this->printPaperHeight  = (string) $setting->paper_height;
+        $this->printMargin       = (string) $setting->margin;
+        $this->printGap          = (string) $setting->gap;
+    }
+
+    public function updated(string $name, $value): void
+    {
+        if (! array_key_exists($name, self::PRINT_SETTING_FIELDS)) {
+            return;
+        }
+
+        PrintSetting::updateSettings([
+            self::PRINT_SETTING_FIELDS[$name] => $value,
+        ]);
+    }
 
     protected function rules(): array
     {

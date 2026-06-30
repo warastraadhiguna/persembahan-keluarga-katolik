@@ -36,6 +36,9 @@ Route::middleware(['auth', 'verified'])->group(function () {
 
         Route::get('keluarga/{family}/qr', [FamilyQrController::class, 'show'])
             ->name('keluarga.qr');
+
+        Route::get('keluarga/{family}/riwayat', [FamilyQrController::class, 'history'])
+            ->name('keluarga.riwayat');
     });
 
     Route::view('persembahan', 'persembahan')

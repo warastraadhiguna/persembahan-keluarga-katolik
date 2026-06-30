@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use App\Models\Family;
+use App\Models\PrintSetting;
 use Illuminate\Http\Request;
 use Illuminate\Validation\Rule;
 
@@ -12,7 +13,16 @@ class FamilyQrController extends Controller
     {
         $family->loadMissing('lingkungan.wilayah');
 
-        return view('keluarga-qr', compact('family'));
+        $printSetting = PrintSetting::current();
+
+        return view('keluarga-qr', compact('family', 'printSetting'));
+    }
+
+    public function history(Family $family)
+    {
+        $family->loadMissing('lingkungan.wilayah');
+
+        return view('keluarga-riwayat', compact('family'));
     }
 
     private const PAPER_SIZES = [
