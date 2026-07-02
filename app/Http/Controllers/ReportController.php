@@ -18,29 +18,32 @@ class ReportController extends Controller
 
     public function monthlyExcel(Request $request)
     {
-        [$bulan, $tahun, $wilayahId, $lingkunganId, $userId] = $this->monthlyFilters($request);
+        [$dateFrom, $dateTo, $wilayahId, $lingkunganId, $userId, $statusFilter] = $this->monthlyFilters($request);
 
         return Excel::download(
-            new MonthlyReportExport($bulan, $tahun, $wilayahId, $lingkunganId, $userId),
-            "rekap-bulanan-{$tahun}-{$bulan}.xlsx"
+            new MonthlyReportExport($dateFrom, $dateTo, $wilayahId, $lingkunganId, $userId, $statusFilter),
+            "rekap-bulanan-{$dateFrom}-sd-{$dateTo}.xlsx"
         );
     }
 
     public function monthlyPdf(Request $request)
     {
-        [$bulan, $tahun, $wilayahId, $lingkunganId, $userId] = $this->monthlyFilters($request);
+        [$dateFrom, $dateTo, $wilayahId, $lingkunganId, $userId, $statusFilter] = $this->monthlyFilters($request);
 
-        $rows = $this->reports->monthly($bulan, $tahun, $wilayahId, $lingkunganId, $userId);
+        $rows        = $this->reports->monthly($dateFrom, $dateTo, $wilayahId, $lingkunganId, $userId, $statusFilter);
         $petugasName = $userId ? User::find($userId)?->name : null;
 
         $pdf = Pdf::loadView('reports.monthly-pdf', [
-            'rows' => $rows, 'bulan' => $bulan, 'tahun' => $tahun,
-            'wilayah'    => $wilayahId ? Wilayah::find($wilayahId)?->nama : null,
-            'lingkungan' => $lingkunganId ? Lingkungan::find($lingkunganId)?->nama : null,
-            'petugasName' => $petugasName,
+            'rows'         => $rows,
+            'dateFrom'     => $dateFrom,
+            'dateTo'       => $dateTo,
+            'statusFilter' => $statusFilter,
+            'wilayah'      => $wilayahId ? Wilayah::find($wilayahId)?->nama : null,
+            'lingkungan'   => $lingkunganId ? Lingkungan::find($lingkunganId)?->nama : null,
+            'petugasName'  => $petugasName,
         ])->setPaper('a4', 'portrait');
 
-        return $pdf->download("rekap-bulanan-{$tahun}-{$bulan}.pdf");
+        return $pdf->download("rekap-bulanan-{$dateFrom}-sd-{$dateTo}.pdf");
     }
 
     public function yearlyExcel(Request $request)
@@ -82,11 +85,12 @@ class ReportController extends Controller
     private function monthlyFilters(Request $request): array
     {
         return [
-            (int) $request->query('bulan', now()->month),
-            (int) $request->query('tahun', now()->year),
+            $request->query('date_from', now()->startOfMonth()->format('Y-m-d')),
+            $request->query('date_to',   now()->format('Y-m-d')),
             $request->query('wilayah_id') ? (int) $request->query('wilayah_id') : null,
             $request->query('lingkungan_id') ? (int) $request->query('lingkungan_id') : null,
             $request->query('user_id') ? (int) $request->query('user_id') : null,
+            $request->query('status_filter', ''),
         ];
     }
 

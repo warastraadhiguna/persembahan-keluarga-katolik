@@ -43,16 +43,16 @@
 
             <div class="flex gap-2">
                 <a href="{{ route('laporan.tahunan.excel', ['tahun' => $tahun, 'wilayah_id' => $wilayahId, 'lingkungan_id' => $lingkunganId, 'user_id' => $userId]) }}"
-                    class="inline-flex items-center gap-1.5 text-sm font-medium text-green-700 border border-green-200 hover:bg-green-50 rounded-lg px-3 py-2 transition-colors">
+                    class="inline-flex items-center gap-2 px-5 py-2.5 rounded-xl text-sm font-semibold text-white shadow-sm bg-gradient-to-r from-emerald-500 to-green-600 hover:from-emerald-600 hover:to-green-700 active:scale-95 transition-all">
                     <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/>
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 17v-2m3 2v-4m3 4v-6m2 10H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/>
                     </svg>
                     Ekspor Excel
                 </a>
                 <a href="{{ route('laporan.tahunan.pdf', ['tahun' => $tahun, 'wilayah_id' => $wilayahId, 'lingkungan_id' => $lingkunganId, 'user_id' => $userId]) }}"
-                    class="inline-flex items-center gap-1.5 text-sm font-medium text-red-700 border border-red-200 hover:bg-red-50 rounded-lg px-3 py-2 transition-colors">
+                    class="inline-flex items-center gap-2 px-5 py-2.5 rounded-xl text-sm font-semibold text-white shadow-sm bg-gradient-to-r from-rose-500 to-red-600 hover:from-rose-600 hover:to-red-700 active:scale-95 transition-all">
                     <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/>
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 21h10a2 2 0 002-2V9.414a1 1 0 00-.293-.707l-5.414-5.414A1 1 0 0012.586 3H7a2 2 0 00-2 2v14a2 2 0 002 2z"/>
                     </svg>
                     Ekspor PDF
                 </a>

@@ -74,5 +74,12 @@
             </tr>
         </tfoot>
     </table>
+
+    <div style="margin-top:40px; text-align:right; font-size:11px; font-family:Helvetica,Arial,sans-serif;">
+        <p style="margin:0 0 4px;">________________, ______________________</p>
+        <p style="margin:0 0 50px; text-align:center; width:220px; display:inline-block;">Mengetahui,</p>
+        <br>
+        <p style="margin:0; text-align:center; width:220px; display:inline-block;">________________________________________</p>
+    </div>
 </body>
 </html>

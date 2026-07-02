@@ -48,6 +48,12 @@ Route::middleware(['auth', 'verified'])->group(function () {
 
         Route::get('keluarga/{family}/riwayat', [FamilyQrController::class, 'history'])
             ->name('keluarga.riwayat');
+
+        Route::get('keluarga/{family}/riwayat/excel', [FamilyQrController::class, 'historyExcel'])
+            ->name('keluarga.riwayat.excel');
+
+        Route::get('keluarga/{family}/riwayat/pdf', [FamilyQrController::class, 'historyPdf'])
+            ->name('keluarga.riwayat.pdf');
     });
 
     Route::view('persembahan', 'persembahan')

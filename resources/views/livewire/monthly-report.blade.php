@@ -1,23 +1,30 @@
 <div>
     {{-- Filter bar --}}
     <div class="bg-white rounded-xl shadow-sm border border-gray-100 p-5 mb-5">
-        <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-3">
+        <div class="grid grid-cols-1 sm:grid-cols-3 gap-3">
             <div>
-                <label class="block text-xs font-medium text-gray-500 mb-1">Bulan</label>
-                <select wire:model.live="bulan" class="w-full text-sm border border-gray-200 rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-primary-500">
-                    @foreach (\App\Models\Transaction::MONTHS as $num => $label)
-                        <option value="{{ $num }}">{{ $label }}</option>
-                    @endforeach
-                </select>
-            </div>
-            <div>
-                <label class="block text-xs font-medium text-gray-500 mb-1">Tahun</label>
-                <input type="number" wire:model.live="tahun"
+                <label class="block text-xs font-medium text-gray-500 mb-1">Dari Tanggal</label>
+                <input type="date" wire:model.live="dateFrom"
                     class="w-full text-sm border border-gray-200 rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-primary-500">
             </div>
             <div>
+                <label class="block text-xs font-medium text-gray-500 mb-1">Sampai Tanggal</label>
+                <input type="date" wire:model.live="dateTo"
+                    class="w-full text-sm border border-gray-200 rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-primary-500">
+            </div>
+            <div>
+                <label class="block text-xs font-medium text-gray-500 mb-1">Status Pembayaran</label>
+                <select wire:model.live="statusFilter"
+                    class="w-full text-sm border border-gray-200 rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-primary-500">
+                    <option value="">Semua Status</option>
+                    <option value="sudah_bayar">Sudah Bayar</option>
+                    <option value="belum_bayar">Belum Bayar</option>
+                </select>
+            </div>
+            <div>
                 <label class="block text-xs font-medium text-gray-500 mb-1">Wilayah</label>
-                <select wire:model.live="wilayahId" class="w-full text-sm border border-gray-200 rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-primary-500">
+                <select wire:model.live="wilayahId"
+                    class="w-full text-sm border border-gray-200 rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-primary-500">
                     <option value="">Semua Wilayah</option>
                     @foreach ($this->wilayahOptions as $w)
                         <option value="{{ $w->id }}">{{ $w->nama }}</option>
@@ -26,7 +33,8 @@
             </div>
             <div>
                 <label class="block text-xs font-medium text-gray-500 mb-1">Lingkungan</label>
-                <select wire:model.live="lingkunganId" class="w-full text-sm border border-gray-200 rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-primary-500">
+                <select wire:model.live="lingkunganId"
+                    class="w-full text-sm border border-gray-200 rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-primary-500">
                     <option value="">Semua Lingkungan</option>
                     @foreach ($this->lingkunganOptions as $l)
                         <option value="{{ $l->id }}">{{ $l->nama }}</option>
@@ -35,7 +43,8 @@
             </div>
             <div>
                 <label class="block text-xs font-medium text-gray-500 mb-1">Petugas Pencatat</label>
-                <select wire:model.live="userId" class="w-full text-sm border border-gray-200 rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-primary-500">
+                <select wire:model.live="userId"
+                    class="w-full text-sm border border-gray-200 rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-primary-500">
                     <option value="">Semua Petugas</option>
                     @foreach ($this->petugasOptions as $p)
                         <option value="{{ $p->id }}">{{ $p->name }}</option>
@@ -50,17 +59,17 @@
             </button>
 
             <div class="flex gap-2">
-                <a href="{{ route('laporan.bulanan.excel', ['bulan' => $bulan, 'tahun' => $tahun, 'wilayah_id' => $wilayahId, 'lingkungan_id' => $lingkunganId, 'user_id' => $userId]) }}"
-                    class="inline-flex items-center gap-1.5 text-sm font-medium text-green-700 border border-green-200 hover:bg-green-50 rounded-lg px-3 py-2 transition-colors">
+                <a href="{{ route('laporan.bulanan.excel', ['date_from' => $dateFrom, 'date_to' => $dateTo, 'wilayah_id' => $wilayahId, 'lingkungan_id' => $lingkunganId, 'user_id' => $userId, 'status_filter' => $statusFilter]) }}"
+                    class="inline-flex items-center gap-2 px-5 py-2.5 rounded-xl text-sm font-semibold text-white shadow-sm bg-gradient-to-r from-emerald-500 to-green-600 hover:from-emerald-600 hover:to-green-700 active:scale-95 transition-all">
                     <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/>
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 17v-2m3 2v-4m3 4v-6m2 10H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/>
                     </svg>
                     Ekspor Excel
                 </a>
-                <a href="{{ route('laporan.bulanan.pdf', ['bulan' => $bulan, 'tahun' => $tahun, 'wilayah_id' => $wilayahId, 'lingkungan_id' => $lingkunganId, 'user_id' => $userId]) }}"
-                    class="inline-flex items-center gap-1.5 text-sm font-medium text-red-700 border border-red-200 hover:bg-red-50 rounded-lg px-3 py-2 transition-colors">
+                <a href="{{ route('laporan.bulanan.pdf', ['date_from' => $dateFrom, 'date_to' => $dateTo, 'wilayah_id' => $wilayahId, 'lingkungan_id' => $lingkunganId, 'user_id' => $userId, 'status_filter' => $statusFilter]) }}"
+                    class="inline-flex items-center gap-2 px-5 py-2.5 rounded-xl text-sm font-semibold text-white shadow-sm bg-gradient-to-r from-rose-500 to-red-600 hover:from-rose-600 hover:to-red-700 active:scale-95 transition-all">
                     <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/>
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 21h10a2 2 0 002-2V9.414a1 1 0 00-.293-.707l-5.414-5.414A1 1 0 0012.586 3H7a2 2 0 00-2 2v14a2 2 0 002 2z"/>
                     </svg>
                     Ekspor PDF
                 </a>
@@ -89,6 +98,7 @@
         <table class="w-full text-sm">
             <thead class="bg-gray-50 border-b border-gray-100">
                 <tr>
+                    <th class="px-4 py-3 text-left font-medium text-gray-500 whitespace-nowrap">#</th>
                     <th class="px-4 py-3 text-left font-medium text-gray-500 whitespace-nowrap">Kode</th>
                     <th class="px-4 py-3 text-left font-medium text-gray-500 whitespace-nowrap">Nama Kepala Keluarga</th>
                     <th class="px-4 py-3 text-left font-medium text-gray-500 whitespace-nowrap">Lingkungan / Wilayah</th>
@@ -98,8 +108,9 @@
                 </tr>
             </thead>
             <tbody class="divide-y divide-gray-50">
-                @forelse ($this->rows as $row)
+                @forelse ($this->rows as $i => $row)
                     <tr>
+                        <td class="px-4 py-3 text-gray-400 text-xs">{{ $i + 1 }}</td>
                         <td class="px-4 py-3 font-mono text-xs text-gray-500 whitespace-nowrap">{{ $row['family']->kode_keluarga }}</td>
                         <td class="px-4 py-3 font-medium text-gray-800 whitespace-nowrap">{{ $row['family']->nama_kepala_keluarga }}</td>
                         <td class="px-4 py-3 text-gray-500 whitespace-nowrap">{{ $row['family']->lingkungan?->nama ?: '-' }} / {{ $row['family']->lingkungan?->wilayah?->nama ?: '-' }}</td>
@@ -116,9 +127,25 @@
                         <td class="px-4 py-3 text-gray-500 whitespace-nowrap">{{ $row['petugas'] ?: '-' }}</td>
                     </tr>
                 @empty
-                    <tr><td colspan="6" class="px-4 py-8 text-center text-gray-400">Tidak ada data keluarga.</td></tr>
+                    <tr><td colspan="7" class="px-4 py-8 text-center text-gray-400">Tidak ada data.</td></tr>
                 @endforelse
             </tbody>
+            @if ($this->rows->isNotEmpty())
+                <tfoot class="border-t-2 border-gray-200 bg-gray-50">
+                    <tr>
+                        <td colspan="5" class="px-4 py-3 text-sm font-semibold text-gray-700">
+                            Total
+                            <span class="ml-2 font-normal text-xs text-gray-500">
+                                ({{ $this->totalSudahBayar }} sudah bayar &bull; {{ $this->totalBelumBayar }} belum bayar)
+                            </span>
+                        </td>
+                        <td class="px-4 py-3 text-right text-sm font-bold text-gray-800 whitespace-nowrap">
+                            Rp {{ number_format($this->totalNominal, 0, ',', '.') }}
+                        </td>
+                        <td></td>
+                    </tr>
+                </tfoot>
+            @endif
         </table>
     </div>
 </div>

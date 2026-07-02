@@ -3,7 +3,6 @@
 namespace App\Exports;
 
 use App\Models\ChurchSetting;
-use App\Models\Transaction;
 use App\Services\PersembahanReportService;
 use Illuminate\Support\Collection;
 use Maatwebsite\Excel\Concerns\FromCollection;
@@ -17,17 +16,18 @@ use PhpOffice\PhpSpreadsheet\Worksheet\Worksheet;
 class MonthlyReportExport implements FromCollection, WithHeadings, WithStyles, WithTitle, WithEvents
 {
     public function __construct(
-        private int $bulan,
-        private int $tahun,
+        private string $dateFrom,
+        private string $dateTo,
         private ?int $wilayahId,
         private ?int $lingkunganId,
         private ?int $userId,
+        private string $statusFilter = '',
     ) {}
 
     public function collection(): Collection
     {
         return app(PersembahanReportService::class)
-            ->monthly($this->bulan, $this->tahun, $this->wilayahId, $this->lingkunganId, $this->userId)
+            ->monthly($this->dateFrom, $this->dateTo, $this->wilayahId, $this->lingkunganId, $this->userId, $this->statusFilter)
             ->values()
             ->map(fn ($row, $i) => [
                 $i + 1,
@@ -51,16 +51,14 @@ class MonthlyReportExport implements FromCollection, WithHeadings, WithStyles, W
 
     public function title(): string
     {
-        return 'Rekap '.Transaction::monthLabel($this->bulan).' '.$this->tahun;
+        return $this->dateFrom === $this->dateTo
+            ? 'Rekap '.$this->dateFrom
+            : 'Rekap '.$this->dateFrom.' sd '.$this->dateTo;
     }
 
     public function styles(Worksheet $sheet)
     {
-        $lastDataRow = $sheet->getHighestRow();
-        return [
-            // Heading row (will be shifted by AfterSheet insert)
-            1 => ['font' => ['bold' => true]],
-        ];
+        return [1 => ['font' => ['bold' => true]]];
     }
 
     public function registerEvents(): array
@@ -108,13 +106,16 @@ class MonthlyReportExport implements FromCollection, WithHeadings, WithStyles, W
                     ->setBorderStyle(\PhpOffice\PhpSpreadsheet\Style\Border::BORDER_MEDIUM);
 
                 // Row 5: report title
-                $sheet->setCellValue('A5', 'Rekap Persembahan Bulanan');
+                $sheet->setCellValue('A5', 'Rekap Persembahan');
                 $sheet->mergeCells("A5:{$lastCol}5");
                 $sheet->getStyle('A5')->getFont()->setBold(true)->setSize(12);
                 $sheet->getStyle('A5')->getAlignment()->setHorizontal('center');
 
                 // Row 6: period
-                $period = Transaction::monthLabel($this->bulan).' '.$this->tahun;
+                $fmt    = fn ($d) => \Carbon\Carbon::parse($d)->format('d/m/Y');
+                $period = $this->dateFrom === $this->dateTo
+                    ? $fmt($this->dateFrom)
+                    : $fmt($this->dateFrom).' s.d. '.$fmt($this->dateTo);
                 $sheet->setCellValue('A6', $period);
                 $sheet->mergeCells("A6:{$lastCol}6");
                 $sheet->getStyle('A6')->getFont()->setSize(10)->setColor(

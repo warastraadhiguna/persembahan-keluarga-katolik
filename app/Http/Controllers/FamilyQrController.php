@@ -2,10 +2,14 @@
 
 namespace App\Http\Controllers;
 
+use App\Exports\FamilyTransactionExport;
 use App\Models\Family;
 use App\Models\PrintSetting;
+use App\Models\Transaction;
+use Barryvdh\DomPDF\Facade\Pdf;
 use Illuminate\Http\Request;
 use Illuminate\Validation\Rule;
+use Maatwebsite\Excel\Facades\Excel;
 
 class FamilyQrController extends Controller
 {
@@ -23,6 +27,49 @@ class FamilyQrController extends Controller
         $family->loadMissing('lingkungan.wilayah');
 
         return view('keluarga-riwayat', compact('family'));
+    }
+
+    public function historyExcel(Family $family)
+    {
+        $family->loadMissing('lingkungan.wilayah');
+
+        $slug = str($family->nama_kepala_keluarga)->slug('-')->limit(30);
+
+        return Excel::download(
+            new FamilyTransactionExport($family),
+            "riwayat-{$family->kode_keluarga}-{$slug}.xlsx"
+        );
+    }
+
+    public function historyPdf(Family $family)
+    {
+        $family->loadMissing('lingkungan.wilayah');
+
+        $transactions = $family->transactions()
+            ->with(['petugas:id,name'])
+            ->orderByDesc('tahun')
+            ->orderByDesc('bulan')
+            ->orderByDesc('tanggal')
+            ->orderByDesc('created_at')
+            ->get();
+
+        $active       = $transactions->where('is_void', false);
+        $totalNominal = (float) $active->sum('nominal');
+        $monthsPaid   = $active->unique(fn ($t) => $t->tahun.'-'.$t->bulan)->count();
+
+        $yearlyGrid = [];
+        foreach ($active as $t) {
+            $yearlyGrid[$t->tahun][$t->bulan] = ($yearlyGrid[$t->tahun][$t->bulan] ?? 0) + (float) $t->nominal;
+        }
+        krsort($yearlyGrid);
+
+        $slug = str($family->nama_kepala_keluarga)->slug('-')->limit(30);
+
+        $pdf = Pdf::loadView('reports.family-transaction-pdf', compact(
+            'family', 'transactions', 'yearlyGrid', 'totalNominal', 'monthsPaid'
+        ))->setPaper('a4', 'portrait');
+
+        return $pdf->download("riwayat-{$family->kode_keluarga}-{$slug}.pdf");
     }
 
     private const PAPER_SIZES = [

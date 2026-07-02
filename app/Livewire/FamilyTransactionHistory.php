@@ -29,8 +29,40 @@ class FamilyTransactionHistory extends Component
             ->with(['petugas:id,name', 'voidedBy:id,name'])
             ->orderByDesc('tahun')
             ->orderByDesc('bulan')
+            ->orderByDesc('tanggal')
             ->orderByDesc('created_at')
             ->get();
+    }
+
+    #[Computed]
+    public function activeTransactions(): Collection
+    {
+        return $this->transactions->where('is_void', false);
+    }
+
+    #[Computed]
+    public function totalNominal(): float
+    {
+        return (float) $this->activeTransactions->sum('nominal');
+    }
+
+    #[Computed]
+    public function monthsPaid(): int
+    {
+        return $this->activeTransactions
+            ->unique(fn ($t) => $t->tahun . '-' . $t->bulan)
+            ->count();
+    }
+
+    #[Computed]
+    public function yearlyGrid(): array
+    {
+        $grid = [];
+        foreach ($this->activeTransactions as $t) {
+            $grid[$t->tahun][$t->bulan] = ($grid[$t->tahun][$t->bulan] ?? 0) + (float) $t->nominal;
+        }
+        krsort($grid);
+        return $grid;
     }
 
     public function confirmVoid(int $id): void

@@ -8,7 +8,14 @@
     .kop-nama { font-size: 15px; font-weight: bold; text-transform: uppercase; letter-spacing: 0.5px; margin: 0 0 2px; }
     .kop-detail { font-size: 10px; color: #4b5563; margin: 0; }
     h1 { font-size: 13px; margin: 0 0 2px; font-weight: bold; text-align: center; }
-    p.sub { margin: 0 0 12px; color: #6b7280; font-size: 10px; text-align: center; }
+    p.sub { margin: 0 0 10px; color: #6b7280; font-size: 10px; text-align: center; }
+    .summary { display: table; width: 100%; border-collapse: collapse; margin-bottom: 12px; }
+    .summary-cell { display: table-cell; width: 33.33%; text-align: center; border: 1px solid #d1d5db; padding: 7px 6px; background: #f9fafb; }
+    .summary-cell .val { font-size: 15px; font-weight: bold; margin: 0 0 2px; }
+    .summary-cell .lbl { font-size: 9px; color: #6b7280; margin: 0; }
+    .val-ok  { color: #15803d; }
+    .val-no  { color: #b91c1c; }
+    .val-tot { color: #1d4ed8; }
     table { width: 100%; border-collapse: collapse; }
     th, td { border: 1px solid #d1d5db; padding: 5px 7px; text-align: left; }
     th { background: #f3f4f6; }
@@ -36,13 +43,37 @@
         </div>
     @endif
 
-    <h1>Rekap Persembahan Bulanan</h1>
+    <h1>Rekap Persembahan</h1>
     <p class="sub">
-        {{ \App\Models\Transaction::monthLabel($bulan) }} {{ $tahun }}
+        @php
+            $fmt = fn($d) => \Carbon\Carbon::parse($d)->format('d/m/Y');
+        @endphp
+        {{ $dateFrom === $dateTo ? $fmt($dateFrom) : $fmt($dateFrom).' s.d. '.$fmt($dateTo) }}
+        @if ($statusFilter === 'sudah_bayar') &bull; Sudah Bayar @elseif ($statusFilter === 'belum_bayar') &bull; Belum Bayar @endif
         @if ($wilayah) &bull; Wilayah: {{ $wilayah }} @endif
         @if ($lingkungan) &bull; Lingkungan: {{ $lingkungan }} @endif
         @if ($petugasName) &bull; Petugas: {{ $petugasName }} @endif
     </p>
+
+    @php
+        $sudahBayar  = $rows->where('sudah_bayar', true)->count();
+        $belumBayar  = $rows->where('sudah_bayar', false)->count();
+        $totalNominal = $rows->sum('nominal');
+    @endphp
+    <div class="summary">
+        <div class="summary-cell">
+            <p class="val val-ok">{{ $sudahBayar }}</p>
+            <p class="lbl">Amplop Sudah Bayar</p>
+        </div>
+        <div class="summary-cell">
+            <p class="val val-no">{{ $belumBayar }}</p>
+            <p class="lbl">Amplop Belum Bayar</p>
+        </div>
+        <div class="summary-cell">
+            <p class="val val-tot" style="font-size:12px;">Rp {{ number_format($totalNominal, 0, ',', '.') }}</p>
+            <p class="lbl">Total Pendapatan</p>
+        </div>
+    </div>
 
     <table>
         <thead>
@@ -70,13 +101,18 @@
         <tfoot>
             <tr>
                 <td colspan="6">
-                    Total ({{ $rows->where('sudah_bayar', true)->count() }} sudah bayar,
-                    {{ $rows->where('sudah_bayar', false)->count() }} belum bayar)
+                    Total ({{ $sudahBayar }} sudah bayar, {{ $belumBayar }} belum bayar)
                 </td>
-                <td class="num">{{ number_format($rows->sum('nominal'), 0, ',', '.') }}</td>
+                <td class="num">{{ number_format($totalNominal, 0, ',', '.') }}</td>
                 <td></td>
             </tr>
         </tfoot>
     </table>
+    <div style="margin-top:40px; text-align:right; font-size:11px; font-family:Helvetica,Arial,sans-serif;">
+        <p style="margin:0 0 4px;">________________, ______________________</p>
+        <p style="margin:0 0 50px; text-align:center; width:220px; display:inline-block;">Mengetahui,</p>
+        <br>
+        <p style="margin:0; text-align:center; width:220px; display:inline-block;">________________________________________</p>
+    </div>
 </body>
 </html>

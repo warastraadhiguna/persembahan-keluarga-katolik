@@ -11,16 +11,17 @@ use Livewire\Component;
 
 class MonthlyReport extends Component
 {
-    public int $bulan;
-    public int $tahun;
-    public string $wilayahId = '';
-    public string $lingkunganId = '';
-    public string $userId = '';
+    public string $dateFrom;
+    public string $dateTo;
+    public string $statusFilter  = '';
+    public string $wilayahId     = '';
+    public string $lingkunganId  = '';
+    public string $userId        = '';
 
     public function mount(): void
     {
-        $this->bulan = (int) now()->month;
-        $this->tahun = (int) now()->year;
+        $this->dateFrom = now()->startOfMonth()->format('Y-m-d');
+        $this->dateTo   = now()->format('Y-m-d');
     }
 
     public function updatedWilayahId(): void
@@ -32,11 +33,12 @@ class MonthlyReport extends Component
     public function rows(): Collection
     {
         return app(PersembahanReportService::class)->monthly(
-            $this->bulan,
-            $this->tahun,
+            $this->dateFrom,
+            $this->dateTo,
             $this->wilayahId !== '' ? (int) $this->wilayahId : null,
             $this->lingkunganId !== '' ? (int) $this->lingkunganId : null,
             $this->userId !== '' ? (int) $this->userId : null,
+            $this->statusFilter,
         );
     }
 
@@ -81,9 +83,12 @@ class MonthlyReport extends Component
 
     public function resetFilters(): void
     {
-        $this->wilayahId = '';
+        $this->dateFrom     = now()->startOfMonth()->format('Y-m-d');
+        $this->dateTo       = now()->format('Y-m-d');
+        $this->statusFilter = '';
+        $this->wilayahId    = '';
         $this->lingkunganId = '';
-        $this->userId = '';
+        $this->userId       = '';
     }
 
     public function render()
