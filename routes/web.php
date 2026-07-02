@@ -68,6 +68,11 @@ Route::middleware(['auth', 'verified'])->group(function () {
         Route::get('laporan/bulanan/pdf', [ReportController::class, 'monthlyPdf'])->name('laporan.bulanan.pdf');
         Route::get('laporan/tahunan/excel', [ReportController::class, 'yearlyExcel'])->name('laporan.tahunan.excel');
         Route::get('laporan/tahunan/pdf', [ReportController::class, 'yearlyPdf'])->name('laporan.tahunan.pdf');
+
+        Route::get('laporan/keluarga', [ReportController::class, 'keluargaList'])->name('laporan.keluarga');
+        Route::get('laporan/keluarga/{family}', [ReportController::class, 'keluargaRiwayat'])->name('laporan.keluarga.riwayat');
+        Route::get('laporan/keluarga/{family}/excel', [ReportController::class, 'keluargaExcel'])->name('laporan.keluarga.excel');
+        Route::get('laporan/keluarga/{family}/pdf', [ReportController::class, 'keluargaPdf'])->name('laporan.keluarga.pdf');
     });
 
     Route::view('audit', 'audit-log')

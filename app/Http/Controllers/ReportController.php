@@ -2,9 +2,12 @@
 
 namespace App\Http\Controllers;
 
+use App\Exports\FamilyTransactionExport;
 use App\Exports\MonthlyReportExport;
 use App\Exports\YearlyReportExport;
+use App\Models\Family;
 use App\Models\Lingkungan;
+use App\Models\Transaction;
 use App\Models\User;
 use App\Models\Wilayah;
 use App\Services\PersembahanReportService;
@@ -80,6 +83,61 @@ class ReportController extends Controller
         ])->setPaper('a4', 'landscape');
 
         return $pdf->download("rekap-tahunan-{$tahun}.pdf");
+    }
+
+    public function keluargaList()
+    {
+        return view('laporan-keluarga');
+    }
+
+    public function keluargaRiwayat(Family $family)
+    {
+        $family->loadMissing('lingkungan.wilayah');
+
+        return view('laporan-keluarga-riwayat', compact('family'));
+    }
+
+    public function keluargaExcel(Family $family)
+    {
+        $family->loadMissing('lingkungan.wilayah');
+
+        $slug = str($family->nama_kepala_keluarga)->slug('-')->limit(30);
+
+        return Excel::download(
+            new FamilyTransactionExport($family),
+            "riwayat-{$family->kode_keluarga}-{$slug}.xlsx"
+        );
+    }
+
+    public function keluargaPdf(Family $family)
+    {
+        $family->loadMissing('lingkungan.wilayah');
+
+        $transactions = $family->transactions()
+            ->with(['petugas:id,name'])
+            ->orderByDesc('tahun')
+            ->orderByDesc('bulan')
+            ->orderByDesc('tanggal')
+            ->orderByDesc('created_at')
+            ->get();
+
+        $active       = $transactions->where('is_void', false);
+        $totalNominal = (float) $active->sum('nominal');
+        $monthsPaid   = $active->unique(fn ($t) => $t->tahun.'-'.$t->bulan)->count();
+
+        $yearlyGrid = [];
+        foreach ($active as $t) {
+            $yearlyGrid[$t->tahun][$t->bulan] = ($yearlyGrid[$t->tahun][$t->bulan] ?? 0) + (float) $t->nominal;
+        }
+        krsort($yearlyGrid);
+
+        $slug = str($family->nama_kepala_keluarga)->slug('-')->limit(30);
+
+        $pdf = Pdf::loadView('reports.family-transaction-pdf', compact(
+            'family', 'transactions', 'yearlyGrid', 'totalNominal', 'monthsPaid'
+        ))->setPaper('a4', 'portrait');
+
+        return $pdf->download("riwayat-{$family->kode_keluarga}-{$slug}.pdf");
     }
 
     private function monthlyFilters(Request $request): array

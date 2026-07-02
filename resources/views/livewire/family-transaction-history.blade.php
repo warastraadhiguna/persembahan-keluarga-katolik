@@ -90,7 +90,9 @@
                         <th class="px-4 py-2.5 text-left font-medium text-gray-500">Petugas</th>
                         <th class="px-4 py-2.5 text-left font-medium text-gray-500">Status</th>
                         <th class="px-4 py-2.5 text-center font-medium text-gray-500">Bukti</th>
-                        <th class="px-4 py-2.5 text-right font-medium text-gray-500">Aksi</th>
+                        @unless ($readOnly)
+                            <th class="px-4 py-2.5 text-right font-medium text-gray-500">Aksi</th>
+                        @endunless
                     </tr>
                 </thead>
                 <tbody class="divide-y divide-gray-50">
@@ -129,18 +131,20 @@
                                     <span class="text-gray-300 text-xs">-</span>
                                 @endif
                             </td>
-                            <td class="px-4 py-3 text-right whitespace-nowrap">
-                                @unless ($transaction->is_void)
-                                    <button type="button" wire:click="confirmVoid({{ $transaction->id }})"
-                                        class="text-xs font-medium text-red-500 hover:text-red-700">
-                                        Batalkan
-                                    </button>
-                                @endunless
-                            </td>
+                            @unless ($readOnly)
+                                <td class="px-4 py-3 text-right whitespace-nowrap">
+                                    @unless ($transaction->is_void)
+                                        <button type="button" wire:click="confirmVoid({{ $transaction->id }})"
+                                            class="text-xs font-medium text-red-500 hover:text-red-700">
+                                            Batalkan
+                                        </button>
+                                    @endunless
+                                </td>
+                            @endunless
                         </tr>
                     @empty
                         <tr>
-                            <td colspan="7" class="px-4 py-10 text-center text-gray-400 text-sm">
+                            <td colspan="{{ $readOnly ? 6 : 7 }}" class="px-4 py-10 text-center text-gray-400 text-sm">
                                 Belum ada transaksi untuk keluarga ini.
                             </td>
                         </tr>
@@ -153,7 +157,7 @@
                             <td class="px-4 py-2.5 text-right text-sm font-bold text-gray-800 whitespace-nowrap">
                                 Rp {{ number_format($this->totalNominal, 0, ',', '.') }}
                             </td>
-                            <td colspan="3"></td>
+                            <td colspan="{{ $readOnly ? 2 : 3 }}"></td>
                         </tr>
                     </tfoot>
                 @endif
@@ -162,7 +166,7 @@
     </div>
 
     {{-- ===== MODAL BATALKAN ===== --}}
-    @if ($showVoidModal)
+    @if ($showVoidModal && !$readOnly)
         <div class="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4" wire:click.self="cancelVoid">
             <div class="bg-white rounded-xl shadow-lg w-full max-w-md p-6">
                 <h3 class="text-base font-semibold text-gray-800 mb-1">Batalkan Transaksi</h3>

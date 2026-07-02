@@ -12,14 +12,16 @@ use Livewire\Component;
 class FamilyTransactionHistory extends Component
 {
     public Family $family;
+    public bool $readOnly = false;
 
     public ?int $voidingId = null;
     public string $voidReason = '';
     public bool $showVoidModal = false;
 
-    public function mount(Family $family): void
+    public function mount(Family $family, bool $readOnly = false): void
     {
-        $this->family = $family;
+        $this->family   = $family;
+        $this->readOnly = $readOnly;
     }
 
     #[Computed]
@@ -67,6 +69,10 @@ class FamilyTransactionHistory extends Component
 
     public function confirmVoid(int $id): void
     {
+        if ($this->readOnly) {
+            return;
+        }
+
         $this->voidingId = $id;
         $this->voidReason = '';
         $this->showVoidModal = true;
@@ -82,6 +88,10 @@ class FamilyTransactionHistory extends Component
 
     public function void(): void
     {
+        if ($this->readOnly) {
+            return;
+        }
+
         $this->validate([
             'voidReason' => ['required', 'string', 'max:500'],
         ], [

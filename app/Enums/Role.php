@@ -7,6 +7,7 @@ enum Role: string
     case Admin     = 'admin';
     case Operator  = 'operator';
     case Bendahara = 'bendahara';
+    case Pimpinan  = 'pimpinan';
 
     public function label(): string
     {
@@ -14,6 +15,7 @@ enum Role: string
             self::Admin     => 'Admin',
             self::Operator  => 'Operator',
             self::Bendahara => 'Bendahara',
+            self::Pimpinan  => 'Pimpinan Gereja',
         };
     }
 
@@ -38,7 +40,7 @@ enum Role: string
     /** Role yang bisa diatur hak aksesnya lewat halaman pengaturan (admin selalu akses penuh). */
     public static function configurableRoles(): array
     {
-        return [self::Operator, self::Bendahara];
+        return [self::Operator, self::Bendahara, self::Pimpinan];
     }
 
     public function canAccess(string $menu): bool
