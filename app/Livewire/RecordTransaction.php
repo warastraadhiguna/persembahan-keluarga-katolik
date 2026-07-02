@@ -27,6 +27,7 @@ class RecordTransaction extends Component
 
     public array $recentTransactions = [];
     public ?string $waLink = null;
+    public ?string $waName = null;
 
     public function mount(): void
     {
@@ -180,6 +181,7 @@ class RecordTransaction extends Component
         $this->nominal = '';
         $this->catatan = '';
         $this->waLink = null;
+        $this->waName = null;
         $this->resetErrorBag();
     }
 
@@ -236,6 +238,7 @@ class RecordTransaction extends Component
 
         // Generate WA link jika keluarga punya no HP
         $this->waLink = null;
+        $this->waName = null;
         if (! empty($this->family->no_hp)) {
             $phone      = $this->normalizePhone($this->family->no_hp);
             $bulanLabel = Transaction::monthLabel($this->bulan);
@@ -243,6 +246,7 @@ class RecordTransaction extends Component
             $waktu      = now()->format('d-m-Y H:i:s');
             $pesan      = "Terima kasih sudah melakukan persembahan keluarga katolik bulan {$bulanLabel} {$this->tahun} tercatat pada {$waktu}." . ($gereja ? " {$gereja}." : '');
             $this->waLink = 'https://wa.me/' . $phone . '?text=' . rawurlencode($pesan);
+            $this->waName = $this->family->nama_kepala_keluarga;
         }
 
         $this->clearFamily();
