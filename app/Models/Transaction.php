@@ -6,6 +6,7 @@ use Illuminate\Database\Eloquent\Attributes\Fillable;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Illuminate\Database\Eloquent\Relations\HasOne;
 
 #[Fillable([
     'family_id', 'bulan', 'tahun', 'tanggal', 'nominal', 'catatan', 'is_kosong', 'bukti_foto', 'user_id',
@@ -54,5 +55,10 @@ class Transaction extends Model
     public function voidedBy(): BelongsTo
     {
         return $this->belongsTo(User::class, 'voided_by');
+    }
+
+    public function pendingVoidRequest(): HasOne
+    {
+        return $this->hasOne(VoidRequest::class)->where('status', 'pending');
     }
 }

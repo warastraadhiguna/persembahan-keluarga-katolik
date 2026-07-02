@@ -88,37 +88,78 @@
                 </x-sidebar-link>
             @endif
 
-            @if (Auth::user()?->canAccessMenu('laporan'))
-                <x-sidebar-link href="{{ route('laporan.bulanan') }}" wire:navigate :active="request()->routeIs('laporan.bulanan*') || request()->routeIs('laporan.tahunan*')">
+            @if (Auth::user()?->canAccessMenu('persetujuan-void'))
+                @php $pendingCount = \App\Models\VoidRequest::where('status', 'pending')->count(); @endphp
+                <x-sidebar-link href="{{ route('void-requests') }}" wire:navigate :active="request()->routeIs('void-requests')">
                     <x-slot name="icon">
                         <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                                d="M9 17v-2m3 2v-4m3 4v-6m2 10H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/>
+                                d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"/>
                         </svg>
                     </x-slot>
-                    Laporan
-                </x-sidebar-link>
-                <x-sidebar-link href="{{ route('laporan.keluarga') }}" wire:navigate :active="request()->routeIs('laporan.keluarga*')">
-                    <x-slot name="icon">
-                        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                                d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0z"/>
-                        </svg>
-                    </x-slot>
-                    Riwayat Keluarga
+                    Persetujuan Pembatalan
+                    @if ($pendingCount > 0)
+                        <span class="ml-auto inline-flex items-center justify-center w-5 h-5 rounded-full bg-orange-500 text-white text-xs font-bold">
+                            {{ $pendingCount > 9 ? '9+' : $pendingCount }}
+                        </span>
+                    @endif
                 </x-sidebar-link>
             @endif
 
-            @if (Auth::user()?->canAccessMenu('audit'))
-                <x-sidebar-link href="{{ route('audit.log') }}" wire:navigate :active="request()->routeIs('audit*')">
-                    <x-slot name="icon">
-                        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                                d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 011.414.414l3.586 3.586A1 1 0 0116 7.414V19a2 2 0 01-2 2z"/>
+            @php
+                $hasLaporan = Auth::user()?->canAccessMenu('laporan');
+                $hasAudit   = Auth::user()?->canAccessMenu('audit');
+                $laporanActive = request()->routeIs('laporan*') || request()->routeIs('audit*');
+            @endphp
+            @if ($hasLaporan || $hasAudit)
+                <div x-data="{ open: {{ $laporanActive ? 'true' : 'false' }} }">
+                    {{-- Parent toggle --}}
+                    <button @click="open = !open"
+                        class="w-full flex items-center gap-3 px-3 py-2 rounded-lg text-sm font-medium transition-colors
+                            {{ $laporanActive ? 'bg-white/20 text-white' : 'text-primary-100 hover:bg-white/10 hover:text-white' }}">
+                        <span class="shrink-0">
+                            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                    d="M9 17v-2m3 2v-4m3 4v-6m2 10H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/>
+                            </svg>
+                        </span>
+                        <span class="flex-1 text-left">Laporan</span>
+                        <svg class="w-4 h-4 shrink-0 transition-transform duration-200" :class="open ? 'rotate-180' : ''"
+                            fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"/>
                         </svg>
-                    </x-slot>
-                    Log Audit
-                </x-sidebar-link>
+                    </button>
+
+                    {{-- Children --}}
+                    <div x-show="open" x-transition:enter="transition-all duration-200 ease-out"
+                        x-transition:enter-start="opacity-0 -translate-y-1" x-transition:enter-end="opacity-100 translate-y-0"
+                        class="mt-0.5 space-y-0.5">
+                        @if ($hasLaporan)
+                            <a href="{{ route('laporan.bulanan') }}" wire:navigate
+                                class="flex items-center pl-11 pr-3 py-1.5 rounded-lg text-xs transition-colors
+                                    {{ request()->routeIs('laporan.bulanan*') ? 'bg-white/20 text-white font-medium' : 'text-primary-200 hover:bg-white/10 hover:text-white' }}">
+                                Rekap Bulanan
+                            </a>
+                            <a href="{{ route('laporan.tahunan') }}" wire:navigate
+                                class="flex items-center pl-11 pr-3 py-1.5 rounded-lg text-xs transition-colors
+                                    {{ request()->routeIs('laporan.tahunan*') ? 'bg-white/20 text-white font-medium' : 'text-primary-200 hover:bg-white/10 hover:text-white' }}">
+                                Rekap Tahunan
+                            </a>
+                            <a href="{{ route('laporan.keluarga') }}" wire:navigate
+                                class="flex items-center pl-11 pr-3 py-1.5 rounded-lg text-xs transition-colors
+                                    {{ request()->routeIs('laporan.keluarga*') ? 'bg-white/20 text-white font-medium' : 'text-primary-200 hover:bg-white/10 hover:text-white' }}">
+                                Riwayat Keluarga
+                            </a>
+                        @endif
+                        @if ($hasAudit)
+                            <a href="{{ route('audit.log') }}" wire:navigate
+                                class="flex items-center pl-11 pr-3 py-1.5 rounded-lg text-xs transition-colors
+                                    {{ request()->routeIs('audit*') ? 'bg-white/20 text-white font-medium' : 'text-primary-200 hover:bg-white/10 hover:text-white' }}">
+                                Log Audit
+                            </a>
+                        @endif
+                    </div>
+                </div>
             @endif
 
             {{-- Master Data --}}
@@ -185,6 +226,18 @@
                             </svg>
                         </x-slot>
                         Hak Akses Role
+                    </x-sidebar-link>
+                @endif
+
+                @if (Auth::user()?->canAccessMenu('backup'))
+                    <x-sidebar-link href="{{ route('backup') }}" wire:navigate :active="request()->routeIs('backup*')">
+                        <x-slot name="icon">
+                            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                    d="M4 7v10c0 2.21 3.582 4 8 4s8-1.79 8-4V7M4 7c0 2.21 3.582 4 8 4s8-1.79 8-4M4 7c0-2.21 3.582-4 8-4s8 1.79 8 4"/>
+                            </svg>
+                        </x-slot>
+                        Backup Database
                     </x-sidebar-link>
                 @endif
             @endif

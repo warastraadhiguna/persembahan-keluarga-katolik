@@ -1,5 +1,6 @@
 <?php
 
+use App\Http\Controllers\BackupController;
 use App\Http\Controllers\DashboardController;
 use App\Http\Controllers\FamilyQrController;
 use App\Http\Controllers\ReportController;
@@ -34,6 +35,12 @@ Route::middleware(['auth', 'verified'])->group(function () {
         ->middleware('role:role-permission')
         ->name('role-permission');
 
+    Route::middleware('role:backup')->group(function () {
+        Route::get('backup', [BackupController::class, 'index'])->name('backup');
+        Route::get('backup/download', [BackupController::class, 'download'])->name('backup.download');
+        Route::get('backup/download/gz', [BackupController::class, 'downloadGz'])->name('backup.download.gz');
+    });
+
     // Manajemen
     Route::view('keluarga', 'keluarga')
         ->middleware('role:keluarga')
@@ -59,6 +66,10 @@ Route::middleware(['auth', 'verified'])->group(function () {
     Route::view('persembahan', 'persembahan')
         ->middleware('role:persembahan')
         ->name('persembahan');
+
+    Route::view('void-requests', 'void-requests')
+        ->middleware('role:persetujuan-void')
+        ->name('void-requests');
 
     Route::middleware('role:laporan')->group(function () {
         Route::view('laporan/bulanan', 'laporan-bulanan')->name('laporan.bulanan');

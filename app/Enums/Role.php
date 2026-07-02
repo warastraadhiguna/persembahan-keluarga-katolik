@@ -34,6 +34,7 @@ enum Role: string
             'wilayah-lingkungan' => 'Wilayah & Lingkungan',
             'gereja'             => 'Data Gereja',
             'nominal-presets'    => 'Preset Nominal',
+            'persetujuan-void'   => 'Persetujuan Pembatalan',
         ];
     }
 

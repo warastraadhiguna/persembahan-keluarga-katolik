@@ -50,13 +50,11 @@
                                 @for ($m = 1; $m <= 12; $m++)
                                     <td class="px-1 py-2.5 text-center">
                                         @if (isset($months[$m]))
-                                            <div class="inline-flex flex-col items-center gap-0.5">
-                                                <span class="w-7 h-7 rounded-full bg-green-100 flex items-center justify-center" title="Rp {{ number_format($months[$m], 0, ',', '.') }}">
-                                                    <svg class="w-3.5 h-3.5 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="3" d="M5 13l4 4L19 7"/>
-                                                    </svg>
-                                                </span>
-                                            </div>
+                                            <span class="w-7 h-7 rounded-full bg-green-100 inline-flex items-center justify-center" title="Rp {{ number_format($months[$m], 0, ',', '.') }}">
+                                                <svg class="w-3.5 h-3.5 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="3" d="M5 13l4 4L19 7"/>
+                                                </svg>
+                                            </span>
                                         @else
                                             <span class="w-7 h-7 rounded-full bg-gray-100 inline-flex items-center justify-center text-gray-300 font-bold text-xs">-</span>
                                         @endif
@@ -97,6 +95,7 @@
                 </thead>
                 <tbody class="divide-y divide-gray-50">
                     @forelse ($this->transactions as $transaction)
+                        @php $pending = $transaction->pendingVoidRequest; @endphp
                         <tr class="hover:bg-gray-50/50 {{ $transaction->is_void ? 'opacity-50' : '' }}">
                             <td class="px-4 py-3 text-gray-500 whitespace-nowrap">
                                 {{ $transaction->tanggal ? str_pad($transaction->tanggal, 2, '0', STR_PAD_LEFT).'/'.substr(\App\Models\Transaction::monthLabel($transaction->bulan), 0, 3).'/'.$transaction->tahun : $transaction->created_at->format('d/m/Y') }}
@@ -114,6 +113,9 @@
                                     @if ($transaction->void_reason)
                                         <p class="text-xs text-gray-400 mt-0.5">{{ $transaction->void_reason }}</p>
                                     @endif
+                                @elseif ($pending)
+                                    <span class="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium bg-orange-100 text-orange-700">Menunggu Persetujuan</span>
+                                    <p class="text-xs text-gray-400 mt-0.5">oleh {{ $pending->requester?->name }}</p>
                                 @elseif ($transaction->is_kosong)
                                     <span class="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium bg-amber-100 text-amber-700">Amplop Kosong</span>
                                 @else
@@ -134,10 +136,19 @@
                             @unless ($readOnly)
                                 <td class="px-4 py-3 text-right whitespace-nowrap">
                                     @unless ($transaction->is_void)
-                                        <button type="button" wire:click="confirmVoid({{ $transaction->id }})"
-                                            class="text-xs font-medium text-red-500 hover:text-red-700">
-                                            Batalkan
-                                        </button>
+                                        @if ($this->canApproveVoid)
+                                            <button type="button" wire:click="confirmVoid({{ $transaction->id }})"
+                                                class="text-xs font-medium text-red-500 hover:text-red-700">
+                                                Batalkan
+                                            </button>
+                                        @elseif ($pending)
+                                            <span class="text-xs text-orange-400 italic">Menunggu...</span>
+                                        @else
+                                            <button type="button" wire:click="requestVoid({{ $transaction->id }})"
+                                                class="text-xs font-medium text-orange-500 hover:text-orange-700">
+                                                Ajukan Pembatalan
+                                            </button>
+                                        @endif
                                     @endunless
                                 </td>
                             @endunless
@@ -165,13 +176,13 @@
         </div>
     </div>
 
-    {{-- ===== MODAL BATALKAN ===== --}}
+    {{-- ===== MODAL: BATALKAN LANGSUNG (punya otoritas) ===== --}}
     @if ($showVoidModal && !$readOnly)
         <div class="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4" wire:click.self="cancelVoid">
             <div class="bg-white rounded-xl shadow-lg w-full max-w-md p-6">
                 <h3 class="text-base font-semibold text-gray-800 mb-1">Batalkan Transaksi</h3>
                 <p class="text-sm text-gray-500 mb-4">
-                    Transaksi tidak akan dihapus, hanya ditandai dibatalkan dan tidak dihitung dalam rekap.
+                    Transaksi akan ditandai dibatalkan dan tidak dihitung dalam rekap.
                 </p>
                 <label class="block text-sm font-medium text-gray-700 mb-1">
                     Alasan Pembatalan <span class="text-red-500">*</span>
@@ -188,6 +199,35 @@
                     <button type="button" wire:click="void" wire:loading.attr="disabled"
                         class="px-4 py-2 text-sm font-medium text-white bg-red-600 hover:bg-red-700 rounded-lg disabled:opacity-50">
                         Konfirmasi Batalkan
+                    </button>
+                </div>
+            </div>
+        </div>
+    @endif
+
+    {{-- ===== MODAL: AJUKAN PEMBATALAN (tanpa otoritas) ===== --}}
+    @if ($showRequestModal && !$readOnly)
+        <div class="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4" wire:click.self="cancelRequest">
+            <div class="bg-white rounded-xl shadow-lg w-full max-w-md p-6">
+                <h3 class="text-base font-semibold text-gray-800 mb-1">Ajukan Pembatalan</h3>
+                <p class="text-sm text-gray-500 mb-4">
+                    Pengajuan akan dikirim ke pemegang otoritas untuk disetujui atau ditolak.
+                </p>
+                <label class="block text-sm font-medium text-gray-700 mb-1">
+                    Alasan Pengajuan <span class="text-red-500">*</span>
+                </label>
+                <textarea wire:model="requestReason" rows="3"
+                    class="w-full text-sm border border-gray-200 rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-primary-500"
+                    placeholder="Jelaskan alasan pembatalan..."></textarea>
+                @error('requestReason') <p class="text-xs text-red-500 mt-1">{{ $message }}</p> @enderror
+                <div class="flex justify-end gap-2 mt-5">
+                    <button type="button" wire:click="cancelRequest"
+                        class="px-4 py-2 text-sm font-medium text-gray-600 hover:bg-gray-50 rounded-lg border border-gray-200">
+                        Batal
+                    </button>
+                    <button type="button" wire:click="submitVoidRequest" wire:loading.attr="disabled"
+                        class="px-4 py-2 text-sm font-medium text-white bg-orange-500 hover:bg-orange-600 rounded-lg disabled:opacity-50">
+                        Kirim Pengajuan
                     </button>
                 </div>
             </div>
