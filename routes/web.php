@@ -1,5 +1,6 @@
 <?php
 
+use App\Http\Controllers\DashboardController;
 use App\Http\Controllers\FamilyQrController;
 use App\Http\Controllers\ReportController;
 use Illuminate\Support\Facades\Route;
@@ -9,10 +10,14 @@ Route::get('/', function () {
 });
 
 Route::middleware(['auth', 'verified'])->group(function () {
-    Route::view('dashboard', 'dashboard')->name('dashboard');
+    Route::get('dashboard', [DashboardController::class, 'index'])->name('dashboard');
     Route::view('profile', 'profile')->name('profile');
 
     // Master data
+    Route::view('gereja', 'gereja')
+        ->middleware('role:gereja')
+        ->name('gereja');
+
     Route::view('pengguna', 'pengguna')
         ->middleware('role:pengguna')
         ->name('pengguna');

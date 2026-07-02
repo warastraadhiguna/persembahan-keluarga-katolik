@@ -25,47 +25,46 @@ new #[Layout('layouts.guest')] class extends Component
 }; ?>
 
 <div>
-    <!-- Session Status -->
-    <x-auth-session-status class="mb-4" :status="session('status')" />
-
-    <form wire:submit="login">
-        <!-- Email Address -->
-        <div>
-            <x-input-label for="email" :value="__('Email')" />
-            <x-text-input wire:model="form.email" id="email" class="block mt-1 w-full" type="email" name="email" required autofocus autocomplete="username" />
-            <x-input-error :messages="$errors->get('form.email')" class="mt-2" />
+    {{-- Header --}}
+    <div class="bg-gradient-to-br from-primary-700 to-primary-500 px-8 py-8 text-center">
+        <div class="flex justify-center mb-4">
+            <div class="w-16 h-16 rounded-full bg-white/20 border-2 border-white/30 flex items-center justify-center shadow-lg">
+                <svg class="w-8 h-8 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z"/>
+                </svg>
+            </div>
         </div>
+        <h1 class="text-2xl font-bold text-white tracking-tight">{{ config('app.name') }}</h1>
+        <p class="text-sm text-white/70 mt-1">Masuk ke akun Anda untuk melanjutkan</p>
+    </div>
 
-        <!-- Password -->
-        <div class="mt-4">
-            <x-input-label for="password" :value="__('Password')" />
+    {{-- Form --}}
+    <div class="bg-white px-8 py-7">
+        <x-auth-session-status class="mb-4" :status="session('status')" />
 
-            <x-text-input wire:model="form.password" id="password" class="block mt-1 w-full"
-                            type="password"
-                            name="password"
-                            required autocomplete="current-password" />
+        <form wire:submit="login" class="space-y-5">
+            <div>
+                <x-input-label for="email" :value="__('Email')" class="text-gray-700 font-medium" />
+                <x-text-input wire:model="form.email" id="email" class="block mt-1.5 w-full" type="email" name="email" required autofocus autocomplete="username" />
+                <x-input-error :messages="$errors->get('form.email')" class="mt-1.5" />
+            </div>
 
-            <x-input-error :messages="$errors->get('form.password')" class="mt-2" />
-        </div>
+            <div>
+                <x-input-label for="password" :value="__('Password')" class="text-gray-700 font-medium" />
+                <x-text-input wire:model="form.password" id="password" class="block mt-1.5 w-full" type="password" name="password" required autocomplete="current-password" />
+                <x-input-error :messages="$errors->get('form.password')" class="mt-1.5" />
+            </div>
 
-        <!-- Remember Me -->
-        <div class="block mt-4">
-            <label for="remember" class="inline-flex items-center">
-                <input wire:model="form.remember" id="remember" type="checkbox" class="rounded border-gray-300 text-indigo-600 shadow-sm focus:ring-indigo-500" name="remember">
-                <span class="ms-2 text-sm text-gray-600">{{ __('Remember me') }}</span>
-            </label>
-        </div>
+            <div class="flex items-center justify-between">
+                <label for="remember" class="inline-flex items-center gap-2 cursor-pointer">
+                    <input wire:model="form.remember" id="remember" type="checkbox" class="rounded border-gray-300 text-primary-600 shadow-sm focus:ring-primary-500" name="remember">
+                    <span class="text-sm text-gray-600">{{ __('Remember me') }}</span>
+                </label>
+            </div>
 
-        <div class="flex items-center justify-end mt-4">
-            @if (Route::has('password.request'))
-                <a class="underline text-sm text-gray-600 hover:text-gray-900 rounded-md focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500" href="{{ route('password.request') }}" wire:navigate>
-                    {{ __('Forgot your password?') }}
-                </a>
-            @endif
-
-            <x-primary-button class="ms-3">
-                {{ __('Log in') }}
+            <x-primary-button class="w-full justify-center py-2.5 text-sm">
+                {{ __('Masuk') }}
             </x-primary-button>
-        </div>
-    </form>
+        </form>
+    </div>
 </div>

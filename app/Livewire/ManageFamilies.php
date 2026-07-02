@@ -31,6 +31,7 @@ class ManageFamilies extends Component
     public string $status_ekonomi = 'Sejahtera';
     public int $jml_anggota = 1;
     public string $status_rumah = '';
+    public string $no_hp = '';
     public string $wilayahId = '';
     public string $lingkunganId = '';
     public bool $is_active = true;
@@ -100,6 +101,7 @@ class ManageFamilies extends Component
             'status_ekonomi'       => ['required', Rule::in(['Sejahtera', 'Pra Sejahtera'])],
             'jml_anggota'          => ['required', 'integer', 'min:1', 'max:50'],
             'status_rumah'         => ['nullable', 'string', 'max:50'],
+            'no_hp'                => ['nullable', 'string', 'max:20'],
             'lingkunganId'         => ['nullable', Rule::exists('lingkungans', 'id')],
         ];
     }
@@ -181,7 +183,7 @@ class ManageFamilies extends Component
 
     public function openCreate(): void
     {
-        $this->reset(['editingId', 'nama_kepala_keluarga', 'no_kk', 'status_rumah', 'wilayahId', 'lingkunganId']);
+        $this->reset(['editingId', 'nama_kepala_keluarga', 'no_kk', 'status_rumah', 'no_hp', 'wilayahId', 'lingkunganId']);
         $this->status_ekonomi = 'Sejahtera';
         $this->jml_anggota    = 1;
         $this->is_active      = true;
@@ -198,6 +200,7 @@ class ManageFamilies extends Component
         $this->status_ekonomi        = $family->status_ekonomi;
         $this->jml_anggota           = $family->jml_anggota;
         $this->status_rumah          = (string) $family->status_rumah;
+        $this->no_hp                 = (string) ($family->no_hp ?? '');
         $this->lingkunganId          = (string) ($family->lingkungan_id ?? '');
         $this->wilayahId             = (string) ($family->lingkungan?->wilayah_id ?? '');
         $this->is_active             = $family->is_active;
@@ -215,6 +218,7 @@ class ManageFamilies extends Component
             'status_ekonomi'       => $this->status_ekonomi,
             'jml_anggota'          => $this->jml_anggota,
             'status_rumah'         => $this->status_rumah ?: null,
+            'no_hp'                => $this->no_hp ?: null,
             'lingkungan_id'        => $this->lingkunganId ?: null,
             'is_active'            => $this->is_active,
         ];

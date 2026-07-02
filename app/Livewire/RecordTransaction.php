@@ -19,6 +19,7 @@ class RecordTransaction extends Component
 
     public int $bulan;
     public int $tahun;
+    public int $tanggal;
     public string $nominal = '';
     public string $catatan = '';
 
@@ -26,8 +27,9 @@ class RecordTransaction extends Component
 
     public function mount(): void
     {
-        $this->bulan = (int) now()->month;
-        $this->tahun = (int) now()->year;
+        $this->bulan   = (int) now()->month;
+        $this->tahun   = (int) now()->year;
+        $this->tanggal = (int) now()->day;
         $this->recentTransactions = session()->get('persembahan_recent_transactions', []);
     }
 
@@ -36,6 +38,7 @@ class RecordTransaction extends Component
         return [
             'bulan'   => ['required', 'integer', 'between:1,12'],
             'tahun'   => ['required', 'integer', 'between:2000,2100'],
+            'tanggal' => ['required', 'integer', 'between:1,31'],
             'nominal' => ['required', 'numeric', 'min:0.01'],
             'catatan' => ['nullable', 'string', 'max:1000'],
         ];
@@ -55,6 +58,26 @@ class RecordTransaction extends Component
             5 => 'Mei', 6 => 'Juni', 7 => 'Juli', 8 => 'Agustus',
             9 => 'September', 10 => 'Oktober', 11 => 'November', 12 => 'Desember',
         ];
+    }
+
+    #[Computed]
+    public function daysInMonth(): int
+    {
+        return \Carbon\Carbon::create($this->tahun, $this->bulan, 1)->daysInMonth;
+    }
+
+    public function updatedBulan(): void
+    {
+        if ($this->tanggal > $this->daysInMonth) {
+            $this->tanggal = $this->daysInMonth;
+        }
+    }
+
+    public function updatedTahun(): void
+    {
+        if ($this->tanggal > $this->daysInMonth) {
+            $this->tanggal = $this->daysInMonth;
+        }
     }
 
     #[Computed]
@@ -164,6 +187,7 @@ class RecordTransaction extends Component
             'family_id' => $this->family->id,
             'bulan'     => $this->bulan,
             'tahun'     => $this->tahun,
+            'tanggal'   => $this->tanggal,
             'nominal'   => $this->nominal,
             'catatan'   => $this->catatan ?: null,
             'user_id'   => auth()->id(),

@@ -11,7 +11,7 @@ use Illuminate\Support\Str;
 
 #[Fillable([
     'kode_keluarga', 'qr_token', 'nama_kepala_keluarga', 'no_kk',
-    'status_ekonomi', 'jml_anggota', 'status_rumah', 'lingkungan_id',
+    'status_ekonomi', 'jml_anggota', 'status_rumah', 'no_hp', 'lingkungan_id',
     'is_active',
 ])]
 class Family extends Model

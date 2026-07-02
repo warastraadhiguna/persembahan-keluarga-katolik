@@ -116,7 +116,7 @@
                 <div class="bg-white rounded-xl shadow-sm border border-gray-100 p-5">
                     <h3 class="text-sm font-semibold text-gray-700 mb-4">Input Persembahan</h3>
 
-                    <div class="grid grid-cols-2 gap-3 mb-3">
+                    <div class="grid grid-cols-3 gap-3 mb-3">
                         <div>
                             <label class="block text-sm font-medium text-gray-700 mb-1">Bulan</label>
                             <select wire:model.live="bulan"
@@ -124,6 +124,15 @@
                                 @foreach ($this->monthOptions as $num => $label)
                                     <option value="{{ $num }}">{{ $label }}</option>
                                 @endforeach
+                            </select>
+                        </div>
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-1">Tanggal</label>
+                            <select wire:model="tanggal"
+                                class="w-full text-sm border border-gray-200 rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-primary-500">
+                                @for ($d = 1; $d <= $this->daysInMonth; $d++)
+                                    <option value="{{ $d }}">{{ $d }}</option>
+                                @endfor
                             </select>
                         </div>
                         <div>
@@ -142,11 +151,11 @@
                                 $wire.set('nominal', digits, false);
                             }
                         }"
-                        x-init="display = $wire.nominal ? new Intl.NumberFormat('id-ID').format($wire.nominal) : ''">
+                        x-init="display = $wire.nominal ? new Intl.NumberFormat('id-ID').format($wire.nominal) : ''; $nextTick(() => $refs.nominalInput.focus())">
                         <label class="block text-sm font-medium text-gray-700 mb-1">Nominal (Rp)</label>
                         <div class="relative">
                             <span class="absolute left-3 top-1/2 -translate-y-1/2 text-sm text-gray-400">Rp</span>
-                            <input type="text" inputmode="numeric" placeholder="0"
+                            <input x-ref="nominalInput" type="text" inputmode="numeric" placeholder="0"
                                 x-model="display" @input="format($event.target.value)"
                                 class="w-full pl-9 pr-3 py-2 text-sm border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary-500 @error('nominal') border-red-300 @enderror">
                         </div>

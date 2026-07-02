@@ -4,8 +4,11 @@
 <meta charset="utf-8">
 <style>
     body { font-family: Helvetica, Arial, sans-serif; font-size: 11px; color: #1f2937; }
-    h1 { font-size: 16px; margin: 0 0 2px; }
-    p.sub { margin: 0 0 14px; color: #6b7280; }
+    .kop { border-bottom: 2.5px solid #1f2937; padding-bottom: 8px; margin-bottom: 10px; text-align: center; }
+    .kop-nama { font-size: 15px; font-weight: bold; text-transform: uppercase; letter-spacing: 0.5px; margin: 0 0 2px; }
+    .kop-detail { font-size: 10px; color: #4b5563; margin: 0; }
+    h1 { font-size: 13px; margin: 0 0 2px; font-weight: bold; text-align: center; }
+    p.sub { margin: 0 0 12px; color: #6b7280; font-size: 10px; text-align: center; }
     table { width: 100%; border-collapse: collapse; }
     th, td { border: 1px solid #d1d5db; padding: 5px 7px; text-align: left; }
     th { background: #f3f4f6; }
@@ -16,6 +19,23 @@
 </style>
 </head>
 <body>
+    @php $church = \App\Models\ChurchSetting::current(); @endphp
+    @if ($church->nama)
+        <div class="kop">
+            <p class="kop-nama">{{ $church->nama }}</p>
+            @if ($church->alamat)
+                <p class="kop-detail">{{ $church->alamat }}</p>
+            @endif
+            @if ($church->telepon || $church->email)
+                <p class="kop-detail">
+                    @if ($church->telepon) Telp: {{ $church->telepon }} @endif
+                    @if ($church->telepon && $church->email) &nbsp;&bull;&nbsp; @endif
+                    @if ($church->email) Email: {{ $church->email }} @endif
+                </p>
+            @endif
+        </div>
+    @endif
+
     <h1>Rekap Persembahan Bulanan</h1>
     <p class="sub">
         {{ \App\Models\Transaction::monthLabel($bulan) }} {{ $tahun }}

@@ -8,7 +8,7 @@ use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 
 #[Fillable([
-    'family_id', 'bulan', 'tahun', 'nominal', 'catatan', 'user_id',
+    'family_id', 'bulan', 'tahun', 'tanggal', 'nominal', 'catatan', 'user_id',
     'is_void', 'void_reason', 'voided_by', 'voided_at',
 ])]
 class Transaction extends Model

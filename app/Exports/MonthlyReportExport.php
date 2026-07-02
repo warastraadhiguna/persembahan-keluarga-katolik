@@ -2,16 +2,19 @@
 
 namespace App\Exports;
 
+use App\Models\ChurchSetting;
 use App\Models\Transaction;
 use App\Services\PersembahanReportService;
 use Illuminate\Support\Collection;
 use Maatwebsite\Excel\Concerns\FromCollection;
+use Maatwebsite\Excel\Concerns\WithEvents;
 use Maatwebsite\Excel\Concerns\WithHeadings;
 use Maatwebsite\Excel\Concerns\WithStyles;
 use Maatwebsite\Excel\Concerns\WithTitle;
+use Maatwebsite\Excel\Events\AfterSheet;
 use PhpOffice\PhpSpreadsheet\Worksheet\Worksheet;
 
-class MonthlyReportExport implements FromCollection, WithHeadings, WithStyles, WithTitle
+class MonthlyReportExport implements FromCollection, WithHeadings, WithStyles, WithTitle, WithEvents
 {
     public function __construct(
         private int $bulan,
@@ -53,6 +56,82 @@ class MonthlyReportExport implements FromCollection, WithHeadings, WithStyles, W
 
     public function styles(Worksheet $sheet)
     {
-        return [1 => ['font' => ['bold' => true]]];
+        $lastDataRow = $sheet->getHighestRow();
+        return [
+            // Heading row (will be shifted by AfterSheet insert)
+            1 => ['font' => ['bold' => true]],
+        ];
+    }
+
+    public function registerEvents(): array
+    {
+        return [
+            AfterSheet::class => function (AfterSheet $event) {
+                $sheet = $event->sheet->getDelegate();
+                $lastCol = 'H';
+
+                // Insert 6 rows at top for kop block
+                $sheet->insertNewRowBefore(1, 6);
+
+                $church = ChurchSetting::current();
+
+                // Row 1: church name
+                $sheet->setCellValue('A1', strtoupper($church->nama ?: ''));
+                $sheet->mergeCells("A1:{$lastCol}1");
+                $sheet->getStyle('A1')->getFont()->setBold(true)->setSize(13);
+                $sheet->getStyle('A1')->getAlignment()->setHorizontal('center');
+
+                // Row 2: address
+                if ($church->alamat) {
+                    $sheet->setCellValue('A2', $church->alamat);
+                    $sheet->mergeCells("A2:{$lastCol}2");
+                    $sheet->getStyle('A2')->getFont()->setSize(9);
+                    $sheet->getStyle('A2')->getAlignment()->setHorizontal('center');
+                }
+
+                // Row 3: telepon / email
+                $contact = trim(
+                    ($church->telepon ? 'Telp: '.$church->telepon : '')
+                    . ($church->telepon && $church->email ? '   |   ' : '')
+                    . ($church->email ? 'Email: '.$church->email : '')
+                );
+                if ($contact) {
+                    $sheet->setCellValue('A3', $contact);
+                    $sheet->mergeCells("A3:{$lastCol}3");
+                    $sheet->getStyle('A3')->getFont()->setSize(9);
+                    $sheet->getStyle('A3')->getAlignment()->setHorizontal('center');
+                }
+
+                // Border bottom kop (row 3)
+                $sheet->getStyle("A3:{$lastCol}3")
+                    ->getBorders()->getBottom()
+                    ->setBorderStyle(\PhpOffice\PhpSpreadsheet\Style\Border::BORDER_MEDIUM);
+
+                // Row 5: report title
+                $sheet->setCellValue('A5', 'Rekap Persembahan Bulanan');
+                $sheet->mergeCells("A5:{$lastCol}5");
+                $sheet->getStyle('A5')->getFont()->setBold(true)->setSize(12);
+                $sheet->getStyle('A5')->getAlignment()->setHorizontal('center');
+
+                // Row 6: period
+                $period = Transaction::monthLabel($this->bulan).' '.$this->tahun;
+                $sheet->setCellValue('A6', $period);
+                $sheet->mergeCells("A6:{$lastCol}6");
+                $sheet->getStyle('A6')->getFont()->setSize(10)->setColor(
+                    (new \PhpOffice\PhpSpreadsheet\Style\Color())->setRGB('6b7280')
+                );
+                $sheet->getStyle('A6')->getAlignment()->setHorizontal('center');
+
+                // Heading row (now row 7)
+                $sheet->getStyle("A7:{$lastCol}7")->getFont()->setBold(true);
+                $sheet->getStyle("A7:{$lastCol}7")->getFill()
+                    ->setFillType(\PhpOffice\PhpSpreadsheet\Style\Fill::FILL_SOLID)
+                    ->getStartColor()->setRGB('f3f4f6');
+
+                // Row spacing
+                $sheet->getRowDimension(1)->setRowHeight(20);
+                $sheet->getRowDimension(4)->setRowHeight(4);
+            },
+        ];
     }
 }

@@ -30,6 +30,7 @@ enum Role: string
             'laporan'            => 'Laporan',
             'audit'              => 'Log Audit',
             'wilayah-lingkungan' => 'Wilayah & Lingkungan',
+            'gereja'             => 'Data Gereja',
         ];
     }
 
