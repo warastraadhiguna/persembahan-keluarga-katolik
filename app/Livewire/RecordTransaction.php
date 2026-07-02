@@ -2,6 +2,7 @@
 
 namespace App\Livewire;
 
+use App\Models\ChurchSetting;
 use App\Models\Family;
 use App\Models\NominalPreset;
 use App\Models\Transaction;
@@ -25,6 +26,7 @@ class RecordTransaction extends Component
     public string $catatan = '';
 
     public array $recentTransactions = [];
+    public ?string $waLink = null;
 
     public function mount(): void
     {
@@ -177,6 +179,7 @@ class RecordTransaction extends Component
         $this->manualSearch = '';
         $this->nominal = '';
         $this->catatan = '';
+        $this->waLink = null;
         $this->resetErrorBag();
     }
 
@@ -231,7 +234,31 @@ class RecordTransaction extends Component
 
         session()->flash('success', "Persembahan {$this->family->nama_kepala_keluarga} berhasil disimpan.");
 
+        // Generate WA link jika keluarga punya no HP
+        $this->waLink = null;
+        if (! empty($this->family->no_hp)) {
+            $phone      = $this->normalizePhone($this->family->no_hp);
+            $bulanLabel = Transaction::monthLabel($this->bulan);
+            $gereja     = ChurchSetting::current()->nama;
+            $waktu      = now()->format('d-m-Y H:i:s');
+            $pesan      = "Terima kasih sudah melakukan persembahan keluarga katolik bulan {$bulanLabel} {$this->tahun} tercatat pada {$waktu}." . ($gereja ? " {$gereja}." : '');
+            $this->waLink = 'https://wa.me/' . $phone . '?text=' . rawurlencode($pesan);
+        }
+
         $this->clearFamily();
+    }
+
+    private function normalizePhone(string $phone): string
+    {
+        // Hapus semua karakter selain digit dan +
+        $phone = preg_replace('/[^0-9+]/', '', $phone);
+        // Hapus tanda +
+        $phone = ltrim($phone, '+');
+        // 0xxx → 62xxx (Indonesia)
+        if (str_starts_with($phone, '0')) {
+            $phone = '62' . substr($phone, 1);
+        }
+        return $phone;
     }
 
     public function render()
