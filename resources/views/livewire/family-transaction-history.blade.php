@@ -89,6 +89,7 @@
                         <th class="px-4 py-2.5 text-right font-medium text-gray-500">Nominal</th>
                         <th class="px-4 py-2.5 text-left font-medium text-gray-500">Petugas</th>
                         <th class="px-4 py-2.5 text-left font-medium text-gray-500">Status</th>
+                        <th class="px-4 py-2.5 text-center font-medium text-gray-500">Bukti</th>
                         <th class="px-4 py-2.5 text-right font-medium text-gray-500">Aksi</th>
                     </tr>
                 </thead>
@@ -101,22 +102,31 @@
                             <td class="px-4 py-3 font-medium text-gray-800 whitespace-nowrap">
                                 {{ \App\Models\Transaction::monthLabel($transaction->bulan) }} {{ $transaction->tahun }}
                             </td>
-                            <td class="px-4 py-3 text-right font-semibold text-gray-700 whitespace-nowrap {{ $transaction->is_void ? 'line-through' : '' }}">
-                                Rp {{ number_format((float) $transaction->nominal, 0, ',', '.') }}
+                            <td class="px-4 py-3 text-right font-semibold whitespace-nowrap {{ $transaction->is_void ? 'line-through text-gray-400' : ($transaction->is_kosong ? 'text-amber-600' : 'text-gray-700') }}">
+                                {{ $transaction->is_kosong ? 'Kosong' : 'Rp '.number_format((float) $transaction->nominal, 0, ',', '.') }}
                             </td>
                             <td class="px-4 py-3 text-gray-500 whitespace-nowrap">{{ $transaction->petugas?->name ?: '-' }}</td>
                             <td class="px-4 py-3">
                                 @if ($transaction->is_void)
-                                    <span class="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium bg-gray-100 text-gray-500">
-                                        Dibatalkan
-                                    </span>
+                                    <span class="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium bg-gray-100 text-gray-500">Dibatalkan</span>
                                     @if ($transaction->void_reason)
                                         <p class="text-xs text-gray-400 mt-0.5">{{ $transaction->void_reason }}</p>
                                     @endif
+                                @elseif ($transaction->is_kosong)
+                                    <span class="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium bg-amber-100 text-amber-700">Amplop Kosong</span>
                                 @else
-                                    <span class="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium bg-green-100 text-green-700">
-                                        Lunas
-                                    </span>
+                                    <span class="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium bg-green-100 text-green-700">Lunas</span>
+                                @endif
+                            </td>
+                            <td class="px-4 py-3 text-center">
+                                @if ($transaction->bukti_foto)
+                                    <a href="{{ $transaction->buktiFotoUrl() }}" target="_blank" rel="noopener">
+                                        <img src="{{ $transaction->buktiFotoUrl() }}"
+                                            class="h-10 w-10 object-cover rounded-lg border border-gray-200 mx-auto hover:scale-105 transition-transform"
+                                            title="Lihat bukti foto">
+                                    </a>
+                                @else
+                                    <span class="text-gray-300 text-xs">-</span>
                                 @endif
                             </td>
                             <td class="px-4 py-3 text-right whitespace-nowrap">
@@ -130,7 +140,7 @@
                         </tr>
                     @empty
                         <tr>
-                            <td colspan="6" class="px-4 py-10 text-center text-gray-400 text-sm">
+                            <td colspan="7" class="px-4 py-10 text-center text-gray-400 text-sm">
                                 Belum ada transaksi untuk keluarga ini.
                             </td>
                         </tr>

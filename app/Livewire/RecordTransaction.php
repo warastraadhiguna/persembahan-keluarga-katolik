@@ -8,11 +8,16 @@ use App\Models\NominalPreset;
 use App\Models\Transaction;
 use App\Services\AuditLogger;
 use Illuminate\Support\Collection;
+use Illuminate\Support\Facades\Storage;
+use Illuminate\Support\Str;
 use Livewire\Attributes\Computed;
 use Livewire\Component;
+use Livewire\WithFileUploads;
 
 class RecordTransaction extends Component
 {
+    use WithFileUploads;
+
     public string $qrInput = '';
     public ?Family $family = null;
 
@@ -24,6 +29,8 @@ class RecordTransaction extends Component
     public int $tanggal;
     public string $nominal = '';
     public string $catatan = '';
+    public bool $isKosong = false;
+    public mixed $buktiFoto = null;
 
     public array $recentTransactions = [];
     public ?string $waLink = null;
@@ -40,19 +47,30 @@ class RecordTransaction extends Component
     protected function rules(): array
     {
         return [
-            'bulan'   => ['required', 'integer', 'between:1,12'],
-            'tahun'   => ['required', 'integer', 'between:2000,2100'],
-            'tanggal' => ['required', 'integer', 'between:1,31'],
-            'nominal' => ['required', 'numeric', 'min:0.01'],
-            'catatan' => ['nullable', 'string', 'max:1000'],
+            'bulan'     => ['required', 'integer', 'between:1,12'],
+            'tahun'     => ['required', 'integer', 'between:2000,2100'],
+            'tanggal'   => ['required', 'integer', 'between:1,31'],
+            'nominal'   => $this->isKosong ? ['nullable'] : ['required', 'numeric', 'min:0.01'],
+            'catatan'   => ['nullable', 'string', 'max:1000'],
+            'buktiFoto' => ['nullable', 'image', 'max:5120'],
         ];
     }
 
     protected array $messages = [
-        'nominal.required' => 'Nominal wajib diisi.',
-        'nominal.numeric'  => 'Nominal harus berupa angka.',
-        'nominal.min'      => 'Nominal harus lebih dari 0.',
+        'nominal.required'  => 'Nominal wajib diisi.',
+        'nominal.numeric'   => 'Nominal harus berupa angka.',
+        'nominal.min'       => 'Nominal harus lebih dari 0.',
+        'buktiFoto.image'   => 'File harus berupa gambar.',
+        'buktiFoto.max'     => 'Ukuran gambar maksimal 5 MB.',
     ];
+
+    public function updatedIsKosong(): void
+    {
+        if ($this->isKosong) {
+            $this->nominal = '';
+            $this->resetErrorBag('nominal');
+        }
+    }
 
     #[Computed]
     public function monthOptions(): array
@@ -170,6 +188,8 @@ class RecordTransaction extends Component
         $this->manualSearch = '';
         $this->nominal = '';
         $this->catatan = '';
+        $this->isKosong = false;
+        $this->buktiFoto = null;
         $this->resetErrorBag();
     }
 
@@ -180,6 +200,8 @@ class RecordTransaction extends Component
         $this->manualSearch = '';
         $this->nominal = '';
         $this->catatan = '';
+        $this->isKosong = false;
+        $this->buktiFoto = null;
         $this->waLink = null;
         $this->waName = null;
         $this->resetErrorBag();
@@ -195,27 +217,35 @@ class RecordTransaction extends Component
 
         $this->validate();
 
+        $buktiPath = null;
+        if ($this->buktiFoto) {
+            $buktiPath = $this->compressAndStore($this->buktiFoto, $this->tahun, $this->bulan);
+        }
+
         $transaction = Transaction::create([
-            'family_id' => $this->family->id,
-            'bulan'     => $this->bulan,
-            'tahun'     => $this->tahun,
-            'tanggal'   => $this->tanggal,
-            'nominal'   => $this->nominal,
-            'catatan'   => $this->catatan ?: null,
-            'user_id'   => auth()->id(),
+            'family_id'  => $this->family->id,
+            'bulan'      => $this->bulan,
+            'tahun'      => $this->tahun,
+            'tanggal'    => $this->tanggal,
+            'nominal'    => $this->isKosong ? 0 : $this->nominal,
+            'catatan'    => $this->catatan ?: null,
+            'is_kosong'  => $this->isKosong,
+            'bukti_foto' => $buktiPath,
+            'user_id'    => auth()->id(),
         ]);
 
         AuditLogger::log(
             'transaction.created',
             $transaction,
-            "Mencatat persembahan {$this->family->nama_kepala_keluarga} (" . \App\Models\Transaction::monthLabel($this->bulan) . " {$this->tahun})",
+            "Mencatat persembahan {$this->family->nama_kepala_keluarga} (" . Transaction::monthLabel($this->bulan) . " {$this->tahun})" . ($this->isKosong ? ' [KOSONG]' : ''),
             [],
             [
-                'family_id' => $transaction->family_id,
-                'bulan'     => $transaction->bulan,
-                'tahun'     => $transaction->tahun,
-                'nominal'   => (string) $transaction->nominal,
-                'catatan'   => $transaction->catatan,
+                'family_id'  => $transaction->family_id,
+                'bulan'      => $transaction->bulan,
+                'tahun'      => $transaction->tahun,
+                'nominal'    => (string) $transaction->nominal,
+                'is_kosong'  => $transaction->is_kosong,
+                'catatan'    => $transaction->catatan,
             ],
         );
 
@@ -225,7 +255,8 @@ class RecordTransaction extends Component
             'nama'          => $this->family->nama_kepala_keluarga,
             'bulan'         => $this->bulan,
             'tahun'         => $this->tahun,
-            'nominal'       => (float) $this->nominal,
+            'nominal'       => $this->isKosong ? 0 : (float) $this->nominal,
+            'is_kosong'     => $this->isKosong,
             'catatan'       => $this->catatan,
             'waktu'         => now()->format('H:i'),
         ];
@@ -234,12 +265,13 @@ class RecordTransaction extends Component
         $this->recentTransactions = array_slice($this->recentTransactions, 0, 15);
         session()->put('persembahan_recent_transactions', $this->recentTransactions);
 
-        session()->flash('success', "Persembahan {$this->family->nama_kepala_keluarga} berhasil disimpan.");
+        $label = $this->isKosong ? 'Amplop kosong' : 'Persembahan';
+        session()->flash('success', "{$label} {$this->family->nama_kepala_keluarga} berhasil disimpan.");
 
-        // Generate WA link jika keluarga punya no HP
+        // Generate WA link jika keluarga punya no HP dan bukan kosong
         $this->waLink = null;
         $this->waName = null;
-        if (! empty($this->family->no_hp)) {
+        if (! $this->isKosong && ! empty($this->family->no_hp)) {
             $phone      = $this->normalizePhone($this->family->no_hp);
             $bulanLabel = Transaction::monthLabel($this->bulan);
             $gereja     = ChurchSetting::current()->nama;
@@ -252,16 +284,63 @@ class RecordTransaction extends Component
         $this->clearFamily();
     }
 
+    private function compressAndStore(mixed $file, int $tahun, int $bulan): string
+    {
+        $src  = $file->getRealPath();
+        [$origW, $origH, $type] = getimagesize($src);
+
+        $source = match ($type) {
+            IMAGETYPE_PNG  => imagecreatefrompng($src),
+            IMAGETYPE_WEBP => imagecreatefromwebp($src),
+            IMAGETYPE_GIF  => imagecreatefromgif($src),
+            default        => imagecreatefromjpeg($src),
+        };
+
+        // Auto-rotate JPEG based on EXIF orientation (phone photos)
+        if ($type === IMAGETYPE_JPEG && function_exists('exif_read_data')) {
+            $exif = @exif_read_data($src);
+            $orientation = $exif['Orientation'] ?? 1;
+            $source = match ($orientation) {
+                3 => imagerotate($source, 180, 0),
+                6 => imagerotate($source, -90, 0),
+                8 => imagerotate($source, 90, 0),
+                default => $source,
+            };
+            if (in_array($orientation, [6, 8])) {
+                [$origW, $origH] = [$origH, $origW];
+            }
+        }
+
+        $maxSize = 1200;
+        if ($origW > $maxSize || $origH > $maxSize) {
+            $ratio   = min($maxSize / $origW, $maxSize / $origH);
+            $newW    = (int) round($origW * $ratio);
+            $newH    = (int) round($origH * $ratio);
+            $resized = imagecreatetruecolor($newW, $newH);
+            imagecopyresampled($resized, $source, 0, 0, 0, 0, $newW, $newH, $origW, $origH);
+            imagedestroy($source);
+            $source = $resized;
+        }
+
+        $dir      = "bukti/{$tahun}/{$bulan}";
+        $filename = Str::uuid().'.jpg';
+        $path     = "{$dir}/{$filename}";
+
+        Storage::disk('public')->makeDirectory($dir);
+        imagejpeg($source, storage_path("app/public/{$path}"), 80);
+        imagedestroy($source);
+
+        return $path;
+    }
+
     private function normalizePhone(string $phone): string
     {
-        // Hapus semua karakter selain digit dan +
         $phone = preg_replace('/[^0-9+]/', '', $phone);
-        // Hapus tanda +
         $phone = ltrim($phone, '+');
-        // 0xxx → 62xxx (Indonesia)
         if (str_starts_with($phone, '0')) {
             $phone = '62' . substr($phone, 1);
         }
+
         return $phone;
     }
 

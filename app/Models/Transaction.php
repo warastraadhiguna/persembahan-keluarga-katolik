@@ -8,7 +8,7 @@ use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 
 #[Fillable([
-    'family_id', 'bulan', 'tahun', 'tanggal', 'nominal', 'catatan', 'user_id',
+    'family_id', 'bulan', 'tahun', 'tanggal', 'nominal', 'catatan', 'is_kosong', 'bukti_foto', 'user_id',
     'is_void', 'void_reason', 'voided_by', 'voided_at',
 ])]
 class Transaction extends Model
@@ -31,8 +31,14 @@ class Transaction extends Model
         return [
             'nominal'   => 'decimal:2',
             'is_void'   => 'boolean',
+            'is_kosong' => 'boolean',
             'voided_at' => 'datetime',
         ];
+    }
+
+    public function buktiFotoUrl(): ?string
+    {
+        return $this->bukti_foto ? asset('storage/'.$this->bukti_foto) : null;
     }
 
     public function family(): BelongsTo

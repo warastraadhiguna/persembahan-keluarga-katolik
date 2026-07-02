@@ -150,6 +150,52 @@
                 <div class="bg-white rounded-xl shadow-sm border border-gray-100 p-6">
                     <h3 class="text-base font-semibold text-gray-700 mb-5">Input Persembahan</h3>
 
+                    {{-- Toggle Amplop Kosong --}}
+                    <label class="flex items-center gap-3 mb-5 p-3.5 rounded-xl border-2 cursor-pointer select-none
+                        {{ $isKosong ? 'bg-amber-50 border-amber-400' : 'bg-gray-50 border-gray-200 hover:border-gray-300' }}">
+                        <input type="checkbox" wire:model.live="isKosong" class="w-5 h-5 rounded accent-amber-500 shrink-0">
+                        <div>
+                            <p class="text-base font-semibold {{ $isKosong ? 'text-amber-700' : 'text-gray-600' }}">Amplop Kosong</p>
+                            <p class="text-xs {{ $isKosong ? 'text-amber-600' : 'text-gray-400' }}">Centang jika amplop diserahkan tapi tidak ada uang di dalamnya</p>
+                        </div>
+                    </label>
+
+                    {{-- Nominal (disembunyikan saat kosong) --}}
+                    @unless ($isKosong)
+                        <div class="mb-5"
+                            x-data="{
+                                display: '',
+                                format(val) {
+                                    let digits = String(val).replace(/\D/g, '');
+                                    this.display = digits === '' ? '' : new Intl.NumberFormat('id-ID').format(digits);
+                                    $wire.set('nominal', digits, false);
+                                }
+                            }"
+                            x-init="display = $wire.nominal ? new Intl.NumberFormat('id-ID').format($wire.nominal) : ''; $nextTick(() => $refs.nominalInput.focus())">
+                            <label class="block text-base font-medium text-gray-700 mb-1.5">Nominal (Rp)</label>
+
+                            <div class="flex items-center gap-2 border rounded-xl px-4 py-3 focus-within:ring-2 focus-within:ring-primary-500 {{ $errors->has('nominal') ? 'border-red-300' : 'border-gray-200 focus-within:border-primary-500' }}">
+                                <span class="text-lg font-medium text-gray-400 shrink-0">Rp</span>
+                                <input x-ref="nominalInput" type="text" inputmode="numeric" placeholder="0"
+                                    x-model="display" @input="format($event.target.value)"
+                                    class="flex-1 min-w-0 text-xl font-semibold bg-transparent outline-none placeholder-gray-300">
+                            </div>
+                            @error('nominal') <p class="mt-1.5 text-sm text-red-600">{{ $message }}</p> @enderror
+
+                            @if ($this->nominalPresets->isNotEmpty())
+                                <div class="flex flex-wrap gap-2 mt-3">
+                                    @foreach ($this->nominalPresets as $preset)
+                                        <button type="button"
+                                            @click="format('{{ $preset->nominal }}'); $nextTick(() => $refs.nominalInput.focus())"
+                                            class="px-4 py-2 text-sm font-semibold rounded-xl border-2 border-primary-300 text-primary-700 bg-primary-50 hover:bg-primary-100 active:bg-primary-200 transition-colors">
+                                            {{ $preset->label }}
+                                        </button>
+                                    @endforeach
+                                </div>
+                            @endif
+                        </div>
+                    @endunless
+
                     <div class="grid grid-cols-3 gap-3 mb-5">
                         <div>
                             <label class="block text-base font-medium text-gray-700 mb-1.5">Bulan</label>
@@ -176,43 +222,47 @@
                         </div>
                     </div>
 
-                    <div class="mb-5"
-                        x-data="{
-                            display: '',
-                            format(val) {
-                                let digits = String(val).replace(/\D/g, '');
-                                this.display = digits === '' ? '' : new Intl.NumberFormat('id-ID').format(digits);
-                                $wire.set('nominal', digits, false);
-                            }
-                        }"
-                        x-init="display = $wire.nominal ? new Intl.NumberFormat('id-ID').format($wire.nominal) : ''; $nextTick(() => $refs.nominalInput.focus())">
-                        <label class="block text-base font-medium text-gray-700 mb-1.5">Nominal (Rp)</label>
-
-                        @if ($this->nominalPresets->isNotEmpty())
-                            <div class="flex flex-wrap gap-2 mb-3">
-                                @foreach ($this->nominalPresets as $preset)
-                                    <button type="button"
-                                        @click="format('{{ $preset->nominal }}'); $nextTick(() => $refs.nominalInput.focus())"
-                                        class="px-4 py-2 text-sm font-semibold rounded-xl border-2 border-primary-300 text-primary-700 bg-primary-50 hover:bg-primary-100 active:bg-primary-200 transition-colors">
-                                        {{ $preset->label }}
-                                    </button>
-                                @endforeach
-                            </div>
-                        @endif
-
-                        <div class="flex items-center gap-2 border rounded-xl px-4 py-3 focus-within:ring-2 focus-within:ring-primary-500 {{ $errors->has('nominal') ? 'border-red-300' : 'border-gray-200 focus-within:border-primary-500' }}">
-                            <span class="text-lg font-medium text-gray-400 shrink-0">Rp</span>
-                            <input x-ref="nominalInput" type="text" inputmode="numeric" placeholder="0"
-                                x-model="display" @input="format($event.target.value)"
-                                class="flex-1 min-w-0 text-xl font-semibold bg-transparent outline-none placeholder-gray-300">
-                        </div>
-                        @error('nominal') <p class="mt-1.5 text-sm text-red-600">{{ $message }}</p> @enderror
-                    </div>
-
                     <div class="mb-5">
                         <label class="block text-base font-medium text-gray-700 mb-1.5">Catatan (opsional)</label>
                         <textarea wire:model="catatan" rows="2" placeholder="Catatan tambahan..."
                             class="w-full text-base border border-gray-200 rounded-xl px-4 py-3 focus:outline-none focus:ring-2 focus:ring-primary-500"></textarea>
+                    </div>
+
+                    {{-- Upload Bukti Foto --}}
+                    <div class="mb-5">
+                        <label class="block text-base font-medium text-gray-700 mb-1.5">
+                            Bukti Foto
+                            <span class="text-xs font-normal text-gray-400 ml-1">(opsional, maks. 5 MB)</span>
+                        </label>
+
+                        @if ($buktiFoto)
+                            <div class="mb-3 relative inline-block">
+                                <img src="{{ $buktiFoto->temporaryUrl() }}"
+                                    class="h-36 w-auto rounded-xl border border-gray-200 object-cover shadow-sm">
+                                <button type="button" wire:click="$set('buktiFoto', null)"
+                                    class="absolute -top-2 -right-2 w-6 h-6 rounded-full bg-red-500 text-white flex items-center justify-center shadow">
+                                    <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="3" d="M6 18L18 6M6 6l12 12"/>
+                                    </svg>
+                                </button>
+                            </div>
+                        @endif
+
+                        <label class="flex items-center gap-3 border-2 border-dashed border-gray-300 rounded-xl px-4 py-3 cursor-pointer hover:border-primary-400 hover:bg-primary-50 transition-colors">
+                            <svg class="w-6 h-6 text-gray-400 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                    d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z"/>
+                            </svg>
+                            <span class="text-sm text-gray-500">
+                                {{ $buktiFoto ? 'Ganti foto' : 'Upload foto / Ambil dari kamera HP' }}
+                            </span>
+                            <input type="file" wire:model="buktiFoto" accept="image/*" class="hidden">
+                        </label>
+                        @error('buktiFoto') <p class="mt-1.5 text-sm text-red-600">{{ $message }}</p> @enderror
+
+                        <div wire:loading wire:target="buktiFoto" class="mt-2 text-xs text-primary-600">
+                            Mengunggah foto...
+                        </div>
                     </div>
 
                     <button wire:click="save" wire:loading.attr="disabled" wire:target="save"
