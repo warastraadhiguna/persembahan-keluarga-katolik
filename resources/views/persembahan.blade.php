@@ -6,40 +6,48 @@
     <livewire:record-transaction />
 
     @push('scripts')
-        <script src="https://unpkg.com/html5-qrcode@2.3.8/html5-qrcode.min.js"></script>
+        <script src="https://cdn.jsdelivr.net/npm/jsqr@1.4.0/dist/jsQR.min.js"></script>
         <script>
-            window.__qrScannerInstance = null;
+            window.__scanQrFromFile = function (file) {
+                return new Promise((resolve, reject) => {
+                    const img = new Image();
+                    const url = URL.createObjectURL(file);
 
-            window.__startQrScanner = function (elementId) {
-                if (window.__qrScannerInstance) {
-                    return;
-                }
+                    img.onload = function () {
+                        URL.revokeObjectURL(url);
 
-                const instance = new Html5Qrcode(elementId);
-                window.__qrScannerInstance = instance;
+                        // Coba beberapa ukuran — QR kadang lebih mudah terbaca di resolusi tertentu
+                        const sizes = [800, 1200, 400];
+                        const canvas = document.createElement('canvas');
+                        const ctx = canvas.getContext('2d');
 
-                instance.start(
-                    { facingMode: 'environment' },
-                    { fps: 10, qrbox: 220 },
-                    (decodedText) => {
-                        instance.pause(true);
-                        window.dispatchEvent(new CustomEvent('qr-scanned', { detail: decodedText }));
-                    },
-                    () => {}
-                ).catch(() => {
-                    window.__qrScannerInstance = null;
+                        for (const maxSize of sizes) {
+                            const scale = Math.min(1, maxSize / Math.max(img.width, img.height));
+                            canvas.width  = Math.round(img.width  * scale);
+                            canvas.height = Math.round(img.height * scale);
+                            ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
+
+                            const imageData = ctx.getImageData(0, 0, canvas.width, canvas.height);
+                            const result = jsQR(imageData.data, imageData.width, imageData.height, {
+                                inversionAttempts: 'attemptBoth',
+                            });
+
+                            if (result && result.data) {
+                                resolve(result.data);
+                                return;
+                            }
+                        }
+
+                        reject(new Error('QR tidak ditemukan'));
+                    };
+
+                    img.onerror = function () {
+                        URL.revokeObjectURL(url);
+                        reject(new Error('Gagal membaca gambar'));
+                    };
+
+                    img.src = url;
                 });
-            };
-
-            window.__stopQrScanner = function () {
-                if (!window.__qrScannerInstance) {
-                    return;
-                }
-
-                const instance = window.__qrScannerInstance;
-                window.__qrScannerInstance = null;
-
-                instance.stop().then(() => instance.clear()).catch(() => {});
             };
         </script>
     @endpush

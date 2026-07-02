@@ -18,6 +18,10 @@ Route::middleware(['auth', 'verified'])->group(function () {
         ->middleware('role:gereja')
         ->name('gereja');
 
+    Route::view('nominal-presets', 'nominal-presets')
+        ->middleware('role:nominal-presets')
+        ->name('nominal-presets');
+
     Route::view('pengguna', 'pengguna')
         ->middleware('role:pengguna')
         ->name('pengguna');

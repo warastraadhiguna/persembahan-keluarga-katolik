@@ -35,44 +35,68 @@
                     </div>
                     @error('qrInput') <p class="mt-1 text-xs text-red-600">{{ $message }}</p> @enderror
 
-                    <button wire:click="$set('showScanModal', true)"
-                        class="mt-3 w-full inline-flex items-center justify-center gap-2 bg-primary-600 hover:bg-primary-700 text-white text-sm font-medium px-4 py-2.5 rounded-lg transition-colors">
-                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 9a2 2 0 012-2h.93a2 2 0 001.664-.89l.812-1.22A2 2 0 0110.07 4h3.86a2 2 0 011.664.89l.812 1.22A2 2 0 0018.07 7H19a2 2 0 012 2v9a2 2 0 01-2 2H5a2 2 0 01-2-2V9z"/>
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 13a3 3 0 11-6 0 3 3 0 016 0z"/>
-                        </svg>
-                        Scan dengan Kamera HP
-                    </button>
+                    <div x-data="{ scanning: false, scanError: null }" class="mt-3">
+                        <input x-ref="camInput" type="file" accept="image/*" capture="environment" class="hidden"
+                            @change="
+                                const file = $event.target.files[0];
+                                if (!file) return;
+                                scanning = true; scanError = null;
+                                window.__scanQrFromFile(file)
+                                    .then(text => { scanning = false; $wire.handleQrScanned(text); })
+                                    .catch(() => { scanning = false; scanError = 'QR tidak terbaca, coba foto ulang lebih dekat dan jelas.'; });
+                                $event.target.value = '';
+                            ">
+
+                        <button type="button" @click="scanError = null; $refs.camInput.click()" :disabled="scanning"
+                            class="w-full inline-flex items-center justify-center gap-2 bg-primary-600 hover:bg-primary-700 disabled:opacity-50 text-white text-sm font-medium px-4 py-2.5 rounded-lg transition-colors">
+                            <template x-if="!scanning">
+                                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 9a2 2 0 012-2h.93a2 2 0 001.664-.89l.812-1.22A2 2 0 0110.07 4h3.86a2 2 0 011.664.89l.812 1.22A2 2 0 0018.07 7H19a2 2 0 012 2v9a2 2 0 01-2 2H5a2 2 0 01-2-2V9z"/>
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 13a3 3 0 11-6 0 3 3 0 016 0z"/>
+                                </svg>
+                            </template>
+                            <template x-if="scanning">
+                                <svg class="w-4 h-4 animate-spin" fill="none" viewBox="0 0 24 24">
+                                    <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"/>
+                                    <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z"/>
+                                </svg>
+                            </template>
+                            <span x-text="scanning ? 'Membaca QR...' : 'Scan dengan Kamera HP'"></span>
+                        </button>
+
+                        <p x-show="scanError" x-text="scanError"
+                            class="mt-2 text-xs text-red-500 text-center"></p>
+                    </div>
 
                     <div class="relative my-5">
                         <div class="absolute inset-0 flex items-center"><div class="w-full border-t border-gray-100"></div></div>
-                        <div class="relative flex justify-center"><span class="bg-white px-3 text-xs text-gray-400">atau cari manual</span></div>
+                        <div class="relative flex justify-center"><span class="bg-white px-3 text-sm text-gray-400">atau cari manual</span></div>
                     </div>
 
-                    <div class="relative">
-                        <svg class="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <div class="flex items-center gap-3 border border-gray-200 rounded-xl px-4 py-3.5 focus-within:ring-2 focus-within:ring-primary-500 focus-within:border-primary-500">
+                        <svg class="w-6 h-6 text-gray-400 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0"/>
                         </svg>
                         <input wire:model.live.debounce.300ms="manualSearch" type="text"
                             placeholder="Cari nama, kode keluarga, atau lingkungan..."
-                            class="w-full pl-9 pr-3 py-2 text-sm border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-transparent">
+                            class="flex-1 text-base bg-transparent outline-none placeholder-gray-400">
                     </div>
 
                     @if ($manualSearch)
-                        <div class="mt-2 border border-gray-100 rounded-lg divide-y divide-gray-50 max-h-72 overflow-y-auto">
+                        <div class="mt-2 border border-gray-100 rounded-xl divide-y divide-gray-50 max-h-80 overflow-y-auto">
                             @forelse ($this->manualResults as $result)
                                 <button wire:click="selectFamilyManual({{ $result->id }})" type="button"
-                                    class="w-full text-left px-3 py-2.5 hover:bg-gray-50 transition-colors flex items-center justify-between gap-2">
+                                    class="w-full text-left px-4 py-3.5 hover:bg-gray-50 transition-colors flex items-center justify-between gap-2">
                                     <div>
-                                        <p class="text-sm font-medium text-gray-800">{{ $result->nama_kepala_keluarga }}</p>
-                                        <p class="text-xs text-gray-400">{{ $result->kode_keluarga }} &bull; {{ $result->lingkungan?->nama ?: '-' }}</p>
+                                        <p class="text-base font-medium text-gray-800">{{ $result->nama_kepala_keluarga }}</p>
+                                        <p class="text-sm text-gray-400">{{ $result->kode_keluarga }} &bull; {{ $result->lingkungan?->nama ?: '-' }}</p>
                                     </div>
-                                    <svg class="w-4 h-4 text-gray-300 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <svg class="w-5 h-5 text-gray-300 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"/>
                                     </svg>
                                 </button>
                             @empty
-                                <p class="px-3 py-3 text-sm text-gray-400">Tidak ditemukan.</p>
+                                <p class="px-4 py-4 text-base text-gray-400">Tidak ditemukan.</p>
                             @endforelse
                         </div>
                     @endif
@@ -113,63 +137,76 @@
                 @endif
 
                 {{-- Form input nominal --}}
-                <div class="bg-white rounded-xl shadow-sm border border-gray-100 p-5">
-                    <h3 class="text-sm font-semibold text-gray-700 mb-4">Input Persembahan</h3>
+                <div class="bg-white rounded-xl shadow-sm border border-gray-100 p-6">
+                    <h3 class="text-base font-semibold text-gray-700 mb-5">Input Persembahan</h3>
 
-                    <div class="grid grid-cols-3 gap-3 mb-3">
+                    <div class="grid grid-cols-3 gap-3 mb-5">
                         <div>
-                            <label class="block text-sm font-medium text-gray-700 mb-1">Bulan</label>
+                            <label class="block text-base font-medium text-gray-700 mb-1.5">Bulan</label>
                             <select wire:model.live="bulan"
-                                class="w-full text-sm border border-gray-200 rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-primary-500">
+                                class="w-full text-base border border-gray-200 rounded-xl px-4 py-3 focus:outline-none focus:ring-2 focus:ring-primary-500">
                                 @foreach ($this->monthOptions as $num => $label)
                                     <option value="{{ $num }}">{{ $label }}</option>
                                 @endforeach
                             </select>
                         </div>
                         <div>
-                            <label class="block text-sm font-medium text-gray-700 mb-1">Tanggal</label>
+                            <label class="block text-base font-medium text-gray-700 mb-1.5">Tanggal</label>
                             <select wire:model="tanggal"
-                                class="w-full text-sm border border-gray-200 rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-primary-500">
+                                class="w-full text-base border border-gray-200 rounded-xl px-4 py-3 focus:outline-none focus:ring-2 focus:ring-primary-500">
                                 @for ($d = 1; $d <= $this->daysInMonth; $d++)
                                     <option value="{{ $d }}">{{ $d }}</option>
                                 @endfor
                             </select>
                         </div>
                         <div>
-                            <label class="block text-sm font-medium text-gray-700 mb-1">Tahun</label>
+                            <label class="block text-base font-medium text-gray-700 mb-1.5">Tahun</label>
                             <input wire:model.live="tahun" type="number" min="2000" max="2100"
-                                class="w-full text-sm border border-gray-200 rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-primary-500">
+                                class="w-full text-base border border-gray-200 rounded-xl px-4 py-3 focus:outline-none focus:ring-2 focus:ring-primary-500">
                         </div>
                     </div>
 
-                    <div class="mb-3"
+                    <div class="mb-5"
                         x-data="{
                             display: '',
                             format(val) {
-                                let digits = val.replace(/\D/g, '');
+                                let digits = String(val).replace(/\D/g, '');
                                 this.display = digits === '' ? '' : new Intl.NumberFormat('id-ID').format(digits);
                                 $wire.set('nominal', digits, false);
                             }
                         }"
                         x-init="display = $wire.nominal ? new Intl.NumberFormat('id-ID').format($wire.nominal) : ''; $nextTick(() => $refs.nominalInput.focus())">
-                        <label class="block text-sm font-medium text-gray-700 mb-1">Nominal (Rp)</label>
-                        <div class="relative">
-                            <span class="absolute left-3 top-1/2 -translate-y-1/2 text-sm text-gray-400">Rp</span>
+                        <label class="block text-base font-medium text-gray-700 mb-1.5">Nominal (Rp)</label>
+
+                        @if ($this->nominalPresets->isNotEmpty())
+                            <div class="flex flex-wrap gap-2 mb-3">
+                                @foreach ($this->nominalPresets as $preset)
+                                    <button type="button"
+                                        @click="format('{{ $preset->nominal }}'); $nextTick(() => $refs.nominalInput.focus())"
+                                        class="px-4 py-2 text-sm font-semibold rounded-xl border-2 border-primary-300 text-primary-700 bg-primary-50 hover:bg-primary-100 active:bg-primary-200 transition-colors">
+                                        {{ $preset->label }}
+                                    </button>
+                                @endforeach
+                            </div>
+                        @endif
+
+                        <div class="flex items-center gap-2 border rounded-xl px-4 py-3 focus-within:ring-2 focus-within:ring-primary-500 {{ $errors->has('nominal') ? 'border-red-300' : 'border-gray-200 focus-within:border-primary-500' }}">
+                            <span class="text-lg font-medium text-gray-400 shrink-0">Rp</span>
                             <input x-ref="nominalInput" type="text" inputmode="numeric" placeholder="0"
                                 x-model="display" @input="format($event.target.value)"
-                                class="w-full pl-9 pr-3 py-2 text-sm border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary-500 @error('nominal') border-red-300 @enderror">
+                                class="flex-1 min-w-0 text-xl font-semibold bg-transparent outline-none placeholder-gray-300">
                         </div>
-                        @error('nominal') <p class="mt-1 text-xs text-red-600">{{ $message }}</p> @enderror
+                        @error('nominal') <p class="mt-1.5 text-sm text-red-600">{{ $message }}</p> @enderror
                     </div>
 
-                    <div class="mb-4">
-                        <label class="block text-sm font-medium text-gray-700 mb-1">Catatan (opsional)</label>
+                    <div class="mb-5">
+                        <label class="block text-base font-medium text-gray-700 mb-1.5">Catatan (opsional)</label>
                         <textarea wire:model="catatan" rows="2" placeholder="Catatan tambahan..."
-                            class="w-full text-sm border border-gray-200 rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-primary-500"></textarea>
+                            class="w-full text-base border border-gray-200 rounded-xl px-4 py-3 focus:outline-none focus:ring-2 focus:ring-primary-500"></textarea>
                     </div>
 
                     <button wire:click="save" wire:loading.attr="disabled" wire:target="save"
-                        class="w-full bg-primary-600 hover:bg-primary-700 text-white text-sm font-medium px-4 py-2.5 rounded-lg transition-colors disabled:opacity-50">
+                        class="w-full bg-primary-600 hover:bg-primary-700 text-white text-base font-semibold px-4 py-4 rounded-xl transition-colors disabled:opacity-50">
                         <span wire:loading.remove wire:target="save">Simpan Persembahan</span>
                         <span wire:loading wire:target="save">Menyimpan...</span>
                     </button>
@@ -209,30 +246,5 @@
         </div>
     </div>
 
-    {{-- ============ MODAL SCAN KAMERA ============ --}}
-    <div x-data="{ show: @entangle('showScanModal') }" x-show="show"
-        x-on:qr-scanned.window="$wire.handleQrScanned($event.detail)"
-        x-effect="show ? window.__startQrScanner('qr-reader-box') : window.__stopQrScanner()"
-        x-transition:enter="transition ease-out duration-200"
-        x-transition:enter-start="opacity-0" x-transition:enter-end="opacity-100"
-        x-transition:leave="transition ease-in duration-150"
-        x-transition:leave-start="opacity-100" x-transition:leave-end="opacity-0"
-        class="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60"
-        style="display:none">
-        <div @click.outside="show = false" class="bg-white rounded-xl shadow-xl w-full max-w-sm">
-            <div class="flex items-center justify-between px-5 py-4 border-b border-gray-100">
-                <h3 class="font-semibold text-gray-800">Scan QR dengan Kamera</h3>
-                <button @click="show = false" class="text-gray-400 hover:text-gray-600 p-1 rounded">
-                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/>
-                    </svg>
-                </button>
-            </div>
-            <div class="p-5">
-                <div id="qr-reader-box" class="w-full rounded-lg overflow-hidden bg-gray-900" style="min-height:260px"></div>
-                <p class="text-xs text-gray-400 mt-3 text-center">Arahkan kamera ke QR kartu keluarga.</p>
-            </div>
-        </div>
-    </div>
 
 </div>

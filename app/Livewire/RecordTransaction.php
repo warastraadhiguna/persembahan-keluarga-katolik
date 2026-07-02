@@ -3,6 +3,7 @@
 namespace App\Livewire;
 
 use App\Models\Family;
+use App\Models\NominalPreset;
 use App\Models\Transaction;
 use App\Services\AuditLogger;
 use Illuminate\Support\Collection;
@@ -78,6 +79,12 @@ class RecordTransaction extends Component
         if ($this->tanggal > $this->daysInMonth) {
             $this->tanggal = $this->daysInMonth;
         }
+    }
+
+    #[Computed]
+    public function nominalPresets()
+    {
+        return NominalPreset::active();
     }
 
     #[Computed]

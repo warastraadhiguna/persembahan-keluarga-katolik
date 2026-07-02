@@ -31,6 +31,7 @@ enum Role: string
             'audit'              => 'Log Audit',
             'wilayah-lingkungan' => 'Wilayah & Lingkungan',
             'gereja'             => 'Data Gereja',
+            'nominal-presets'    => 'Preset Nominal',
         ];
     }
 
