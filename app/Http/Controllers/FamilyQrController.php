@@ -5,7 +5,6 @@ namespace App\Http\Controllers;
 use App\Exports\FamilyTransactionExport;
 use App\Models\Family;
 use App\Models\PrintSetting;
-use App\Models\Transaction;
 use Barryvdh\DomPDF\Facade\Pdf;
 use Illuminate\Http\Request;
 use Illuminate\Validation\Rule;
@@ -90,6 +89,7 @@ class FamilyQrController extends Controller
             'paper_height' => ['required_if:paper,custom', 'nullable', 'numeric', 'min:50', 'max:500'],
             'margin'       => ['nullable', 'numeric', 'min:0', 'max:50'],
             'gap'          => ['nullable', 'numeric', 'min:0', 'max:20'],
+            'qr_size'      => ['nullable', 'integer', 'min:20', 'max:90'],
         ]);
 
         $ids = array_values(array_filter(array_map('intval', explode(',', $validated['ids']))));
@@ -132,6 +132,7 @@ class FamilyQrController extends Controller
             'paperHeight' => $paperHeight,
             'margin'      => (float) ($validated['margin'] ?? 10),
             'gap'         => (float) ($validated['gap'] ?? 0),
+            'qrSize'      => (int) ($validated['qr_size'] ?? 55),
         ]);
     }
 }

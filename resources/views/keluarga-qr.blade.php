@@ -15,7 +15,7 @@
         <div class="bg-white rounded-xl shadow-sm border border-gray-100 p-6 text-center flex flex-col items-center justify-center">
             <div class="flex justify-center mb-4">
                 <div class="p-3 bg-white border border-gray-200 rounded-lg inline-block">
-                    {!! QrCode::size(220)->generate($family->qr_token) !!}
+                    {!! QrCode::size(180)->generate($family->qr_token) !!}
                 </div>
             </div>
 
@@ -88,6 +88,20 @@
                         <label class="block text-xs text-gray-500 mb-1">Jarak Antar Stiker (mm)</label>
                         <input type="number" name="gap" value="{{ $printSetting->gap }}" min="0" max="20" step="0.5"
                             class="w-full text-sm border border-gray-200 rounded-lg px-2 py-1.5 focus:outline-none focus:ring-2 focus:ring-primary-500">
+                    </div>
+                </div>
+
+                <div x-data="{ qrSize: {{ $printSetting->qr_size ?? 55 }} }">
+                    <label class="block text-xs text-gray-500 mb-1">
+                        Ukuran QR dalam Stiker
+                        <span class="font-semibold text-gray-700 ml-1" x-text="qrSize + '%'"></span>
+                    </label>
+                    <input type="range" name="qr_size" min="20" max="90" step="5"
+                        x-model="qrSize"
+                        class="w-full accent-primary-600">
+                    <div class="flex justify-between text-xs text-gray-300 mt-0.5">
+                        <span>Kecil (20%)</span>
+                        <span>Besar (90%)</span>
                     </div>
                 </div>
 

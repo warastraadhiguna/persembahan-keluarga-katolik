@@ -59,7 +59,7 @@
             overflow: hidden;
         }
         .cell.empty { border-style: dotted; }
-        .cell svg { width: 55%; max-width: 28mm; height: auto; }
+        .cell svg { width: {{ $qrSize }}%; height: auto; }
         .cell .kode { font-size: 8pt; font-weight: bold; color: #1e4d8b; margin-top: 1mm; }
         .cell .nama { font-size: 7pt; color: #374151; line-height: 1.15; margin-top: 0.5mm; }
 
@@ -83,7 +83,7 @@
 <body>
 
     <div class="toolbar">
-        <span>{{ count($pages) }} lembar &bull; grid {{ $rows }}x{{ $cols }} &bull; kertas {{ rtrim(rtrim(number_format($paperWidth, 1), '0'), '.') }}x{{ rtrim(rtrim(number_format($paperHeight, 1), '0'), '.') }}mm</span>
+        <span>{{ count($pages) }} lembar &bull; grid {{ $rows }}x{{ $cols }} &bull; kertas {{ rtrim(rtrim(number_format($paperWidth, 1), '0'), '.') }}x{{ rtrim(rtrim(number_format($paperHeight, 1), '0'), '.') }}mm &bull; QR {{ $qrSize }}%</span>
         <div style="display:flex; gap:8px;">
             <button class="btn-print" onclick="window.print()">Cetak Sekarang</button>
             <button class="btn-close" onclick="window.close()">Tutup Tab</button>
