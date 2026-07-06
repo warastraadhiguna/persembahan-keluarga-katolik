@@ -163,7 +163,7 @@
             @endif
 
             {{-- Master Data --}}
-            @if (Auth::user()?->canAccessMenu('pengguna') || Auth::user()?->canAccessMenu('wilayah-lingkungan') || Auth::user()?->canAccessMenu('role-permission') || Auth::user()?->canAccessMenu('gereja') || Auth::user()?->canAccessMenu('nominal-presets'))
+            @if (Auth::user()?->canAccessMenu('pengguna') || Auth::user()?->canAccessMenu('wilayah-lingkungan') || Auth::user()?->canAccessMenu('role-permission') || Auth::user()?->canAccessMenu('gereja') || Auth::user()?->canAccessMenu('nominal-presets') || Auth::user()?->canAccessMenu('pengaturan-cetak') || Auth::user()?->canAccessMenu('backup'))
                 <div class="pt-4 pb-1">
                     <p class="px-3 text-xs font-semibold text-primary-200 uppercase tracking-wider">Master Data</p>
                 </div>
@@ -214,6 +214,18 @@
                             </svg>
                         </x-slot>
                         Preset Nominal
+                    </x-sidebar-link>
+                @endif
+
+                @if (Auth::user()?->canAccessMenu('pengaturan-cetak'))
+                    <x-sidebar-link href="{{ route('pengaturan-cetak') }}" wire:navigate :active="request()->routeIs('pengaturan-cetak')">
+                        <x-slot name="icon">
+                            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                    d="M17 17h2a2 2 0 002-2v-4a2 2 0 00-2-2H5a2 2 0 00-2 2v4a2 2 0 002 2h2m2 4h6a1 1 0 001-1v-4a1 1 0 00-1-1H9a1 1 0 00-1 1v4a1 1 0 001 1zm8-12V5a2 2 0 00-2-2H9a2 2 0 00-2 2v4h10z"/>
+                            </svg>
+                        </x-slot>
+                        Pengaturan Cetak
                     </x-sidebar-link>
                 @endif
 

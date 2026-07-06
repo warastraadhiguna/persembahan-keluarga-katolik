@@ -35,6 +35,7 @@ enum Role: string
             'gereja'             => 'Data Gereja',
             'nominal-presets'    => 'Preset Nominal',
             'persetujuan-void'   => 'Persetujuan Pembatalan',
+            'pengaturan-cetak'   => 'Pengaturan Cetak',
         ];
     }
 

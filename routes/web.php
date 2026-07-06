@@ -23,6 +23,10 @@ Route::middleware(['auth', 'verified'])->group(function () {
         ->middleware('role:nominal-presets')
         ->name('nominal-presets');
 
+    Route::view('pengaturan-cetak', 'pengaturan-cetak')
+        ->middleware('role:pengaturan-cetak')
+        ->name('pengaturan-cetak');
+
     Route::view('pengguna', 'pengguna')
         ->middleware('role:pengguna')
         ->name('pengguna');
