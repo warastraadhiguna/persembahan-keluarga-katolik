@@ -43,20 +43,99 @@
                 <input wire:model.live.debounce.300ms="search" type="text" placeholder="Cari nama, kode keluarga, atau lingkungan..."
                     class="w-full pl-9 pr-3 py-2 text-sm border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-transparent">
             </div>
-            <select wire:model.live="filterWilayahId"
-                class="text-sm border border-gray-200 rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-transparent">
-                <option value="">Semua Wilayah</option>
-                @foreach ($this->wilayahOptions as $w)
-                    <option value="{{ $w->id }}">{{ $w->nama }}</option>
-                @endforeach
-            </select>
-            <select wire:model.live="filterLingkunganId"
-                class="text-sm border border-gray-200 rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-transparent">
-                <option value="">Semua Lingkungan</option>
-                @foreach ($this->lingkunganOptions as $l)
-                    <option value="{{ $l->id }}">{{ $l->nama }}</option>
-                @endforeach
-            </select>
+            {{-- Searchable Wilayah --}}
+            <div x-data="{
+                    open: false,
+                    search: '',
+                    options: [
+                        { value: '', label: 'Semua Wilayah' },
+                        @foreach ($this->wilayahOptions as $w)
+                        { value: '{{ $w->id }}', label: @js($w->nama) },
+                        @endforeach
+                    ],
+                    get selected() { return this.options.find(o => o.value == $wire.filterWilayahId) ?? this.options[0]; },
+                    get filtered() {
+                        if (!this.search) return this.options;
+                        const q = this.search.toLowerCase();
+                        return this.options.filter(o => o.label.toLowerCase().includes(q));
+                    },
+                    pick(opt) { $wire.set('filterWilayahId', opt.value); this.open = false; this.search = ''; }
+                }"
+                @keydown.escape="open = false"
+                @click.outside="open = false"
+                class="relative">
+                <button type="button" @click="open = !open"
+                    class="w-44 flex items-center justify-between gap-2 text-sm border border-gray-200 rounded-lg px-3 py-2 bg-white focus:outline-none focus:ring-2 focus:ring-primary-500">
+                    <span class="truncate" x-text="selected.label"></span>
+                    <svg class="w-4 h-4 text-gray-400 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"/>
+                    </svg>
+                </button>
+                <div x-show="open" x-transition:enter="transition ease-out duration-100"
+                    x-transition:enter-start="opacity-0 scale-95" x-transition:enter-end="opacity-100 scale-100"
+                    class="absolute z-50 mt-1 w-56 bg-white border border-gray-200 rounded-lg shadow-lg" style="display:none">
+                    <div class="p-2 border-b border-gray-100">
+                        <input type="text" x-model="search" placeholder="Cari wilayah..." x-ref="searchWilayah"
+                            @click.stop x-init="$watch('open', v => v && $nextTick(() => $refs.searchWilayah.focus()))"
+                            class="w-full text-sm border border-gray-200 rounded px-2 py-1.5 focus:outline-none focus:ring-2 focus:ring-primary-500">
+                    </div>
+                    <ul class="max-h-52 overflow-y-auto py-1">
+                        <template x-for="opt in filtered" :key="opt.value">
+                            <li @click="pick(opt)" x-text="opt.label"
+                                :class="opt.value == $wire.filterWilayahId ? 'bg-primary-50 text-primary-700 font-medium' : 'text-gray-700 hover:bg-gray-50'"
+                                class="px-3 py-2 text-sm cursor-pointer"></li>
+                        </template>
+                        <li x-show="filtered.length === 0" class="px-3 py-2 text-sm text-gray-400">Tidak ditemukan</li>
+                    </ul>
+                </div>
+            </div>
+
+            {{-- Searchable Lingkungan --}}
+            <div x-data="{
+                    open: false,
+                    search: '',
+                    options: [
+                        { value: '', label: 'Semua Lingkungan' },
+                        @foreach ($this->lingkunganOptions as $l)
+                        { value: '{{ $l->id }}', label: @js($l->nama) },
+                        @endforeach
+                    ],
+                    get selected() { return this.options.find(o => o.value == $wire.filterLingkunganId) ?? this.options[0]; },
+                    get filtered() {
+                        if (!this.search) return this.options;
+                        const q = this.search.toLowerCase();
+                        return this.options.filter(o => o.label.toLowerCase().includes(q));
+                    },
+                    pick(opt) { $wire.set('filterLingkunganId', opt.value); this.open = false; this.search = ''; }
+                }"
+                @keydown.escape="open = false"
+                @click.outside="open = false"
+                class="relative">
+                <button type="button" @click="open = !open"
+                    class="w-52 flex items-center justify-between gap-2 text-sm border border-gray-200 rounded-lg px-3 py-2 bg-white focus:outline-none focus:ring-2 focus:ring-primary-500">
+                    <span class="truncate" x-text="selected.label"></span>
+                    <svg class="w-4 h-4 text-gray-400 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"/>
+                    </svg>
+                </button>
+                <div x-show="open" x-transition:enter="transition ease-out duration-100"
+                    x-transition:enter-start="opacity-0 scale-95" x-transition:enter-end="opacity-100 scale-100"
+                    class="absolute z-50 mt-1 w-60 bg-white border border-gray-200 rounded-lg shadow-lg" style="display:none">
+                    <div class="p-2 border-b border-gray-100">
+                        <input type="text" x-model="search" placeholder="Cari lingkungan..." x-ref="searchLingkungan"
+                            @click.stop x-init="$watch('open', v => v && $nextTick(() => $refs.searchLingkungan.focus()))"
+                            class="w-full text-sm border border-gray-200 rounded px-2 py-1.5 focus:outline-none focus:ring-2 focus:ring-primary-500">
+                    </div>
+                    <ul class="max-h-52 overflow-y-auto py-1">
+                        <template x-for="opt in filtered" :key="opt.value">
+                            <li @click="pick(opt)" x-text="opt.label"
+                                :class="opt.value == $wire.filterLingkunganId ? 'bg-primary-50 text-primary-700 font-medium' : 'text-gray-700 hover:bg-gray-50'"
+                                class="px-3 py-2 text-sm cursor-pointer"></li>
+                        </template>
+                        <li x-show="filtered.length === 0" class="px-3 py-2 text-sm text-gray-400">Tidak ditemukan</li>
+                    </ul>
+                </div>
+            </div>
             <button wire:click="selectAllFiltered"
                 class="whitespace-nowrap text-sm border border-gray-200 text-gray-600 hover:bg-gray-50 rounded-lg px-3 py-2 transition-colors">
                 Pilih Semua Hasil Filter
@@ -72,17 +151,6 @@
                 <button wire:click="clearSelection" class="text-xs text-gray-500 hover:text-gray-700 underline">
                     Batalkan pilihan
                 </button>
-
-                <div class="flex-1"></div>
-
-                <a href="{{ route('keluarga.cetak', ['ids' => implode(',', $selectedIds), 'rows' => 8, 'cols' => 3, 'start' => 1, 'paper' => $printPaper, 'paper_width' => $printPaperWidth, 'paper_height' => $printPaperHeight, 'margin' => $printMargin, 'gap' => $printGap]) }}"
-                    target="_blank"
-                    class="inline-flex items-center gap-1.5 bg-primary-600 hover:bg-primary-700 text-white text-xs font-medium px-3 py-2 rounded-lg transition-colors">
-                    <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 17h2a2 2 0 002-2v-4a2 2 0 00-2-2H5a2 2 0 00-2 2v4a2 2 0 002 2h2m2 4h6a1 1 0 001-1v-4a1 1 0 00-1-1H9a1 1 0 00-1 1v4a1 1 0 001 1zm8-12V5a2 2 0 00-2-2H9a2 2 0 00-2 2v4h10z"/>
-                    </svg>
-                    Cetak Massal
-                </a>
             </div>
 
             {{-- Pengaturan ukuran kertas & margin --}}
@@ -119,6 +187,20 @@
                     <input wire:model="printGap" type="number" min="0" max="20" step="0.5"
                         class="w-24 text-sm border border-gray-200 rounded-lg px-2 py-1.5 focus:outline-none focus:ring-2 focus:ring-primary-500">
                 </div>
+                <div x-data="{ qrSize: @entangle('printQrSize') }" class="flex-1 min-w-[180px]">
+                    <label class="block text-xs text-gray-500 mb-1">
+                        Ukuran QR dalam Stiker
+                        <span class="font-semibold text-gray-700 ml-1" x-text="qrSize + '%'"></span>
+                    </label>
+                    <input type="range" min="20" max="90" step="5"
+                        x-model="qrSize"
+                        @change="$wire.set('printQrSize', parseInt(qrSize))"
+                        class="w-full accent-primary-600">
+                    <div class="flex justify-between text-xs text-gray-300 mt-0.5">
+                        <span>20%</span>
+                        <span>90%</span>
+                    </div>
+                </div>
             </div>
 
             {{-- Cetak satuan: posisi custom pada lembar stiker --}}
@@ -139,13 +221,15 @@
                         class="w-24 text-sm border border-gray-200 rounded-lg px-2 py-1.5 focus:outline-none focus:ring-2 focus:ring-primary-500">
                 </div>
 
-                <a href="{{ route('keluarga.cetak', ['ids' => implode(',', $selectedIds), 'rows' => $printRows, 'cols' => $printCols, 'start' => $printStart, 'paper' => $printPaper, 'paper_width' => $printPaperWidth, 'paper_height' => $printPaperHeight, 'margin' => $printMargin, 'gap' => $printGap]) }}"
-                    target="_blank"
-                    class="inline-flex items-center gap-1.5 bg-white border border-primary-200 hover:bg-primary-100 text-primary-700 text-xs font-medium px-3 py-2 rounded-lg transition-colors">
-                    Cetak Satuan (Posisi Custom)
-                </a>
+                <button wire:click="openPrint" type="button"
+                    class="inline-flex items-center gap-1.5 bg-primary-600 hover:bg-primary-700 text-white text-xs font-medium px-3 py-2 rounded-lg transition-colors">
+                    <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 17h2a2 2 0 002-2v-4a2 2 0 00-2-2H5a2 2 0 00-2 2v4a2 2 0 002 2h2m2 4h6a1 1 0 001-1v-4a1 1 0 00-1-1H9a1 1 0 00-1 1v4a1 1 0 001 1zm8-12V5a2 2 0 00-2-2H9a2 2 0 00-2 2v4h10z"/>
+                    </svg>
+                    Cetak Massal
+                </button>
                 <p class="text-xs text-gray-400 max-w-xs">
-                    Untuk cetak di sisa lembar stiker yang sudah terpakai sebagian — posisi 1 = pojok kiri atas.
+                    Posisi 1 = pojok kiri atas. Gunakan untuk cetak di sisa lembar yang sudah terpakai.
                 </p>
             </div>
         </div>

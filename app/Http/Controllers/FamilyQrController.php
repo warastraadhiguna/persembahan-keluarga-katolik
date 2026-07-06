@@ -94,7 +94,7 @@ class FamilyQrController extends Controller
 
         $ids = array_values(array_filter(array_map('intval', explode(',', $validated['ids']))));
 
-        $families = Family::whereIn('id', $ids)->get()->sortBy(
+        $families = Family::whereIn('id', $ids)->with('lingkungan.wilayah')->get()->sortBy(
             fn (Family $f) => array_search($f->id, $ids)
         )->values();
 

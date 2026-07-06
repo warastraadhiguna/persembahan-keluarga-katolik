@@ -56,6 +56,7 @@ class ManageFamilies extends Component
     public string $printPaperHeight = '297';
     public string $printMargin = '10';
     public string $printGap = '0';
+    public int $printQrSize = 55;
 
     private const PRINT_SETTING_FIELDS = [
         'printRows'         => 'rows',
@@ -66,6 +67,7 @@ class ManageFamilies extends Component
         'printPaperHeight'  => 'paper_height',
         'printMargin'       => 'margin',
         'printGap'          => 'gap',
+        'printQrSize'       => 'qr_size',
     ];
 
     public function mount(): void
@@ -80,6 +82,7 @@ class ManageFamilies extends Component
         $this->printPaperHeight  = (string) $setting->paper_height;
         $this->printMargin       = (string) $setting->margin;
         $this->printGap          = (string) $setting->gap;
+        $this->printQrSize       = $setting->qr_size ?? 55;
     }
 
     public function updated(string $name, $value): void
@@ -91,6 +94,28 @@ class ManageFamilies extends Component
         PrintSetting::updateSettings([
             self::PRINT_SETTING_FIELDS[$name] => $value,
         ]);
+    }
+
+    public function openPrint(): void
+    {
+        if (empty($this->selectedIds)) {
+            return;
+        }
+
+        $url = route('keluarga.cetak', [
+            'ids'          => implode(',', $this->selectedIds),
+            'rows'         => $this->printRows,
+            'cols'         => $this->printCols,
+            'start'        => $this->printStart,
+            'paper'        => $this->printPaper,
+            'paper_width'  => $this->printPaperWidth,
+            'paper_height' => $this->printPaperHeight,
+            'margin'       => $this->printMargin,
+            'gap'          => $this->printGap,
+            'qr_size'      => $this->printQrSize,
+        ]);
+
+        $this->js("window.open(" . json_encode($url) . ", '_blank')");
     }
 
     protected function rules(): array

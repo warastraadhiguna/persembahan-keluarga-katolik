@@ -60,8 +60,16 @@
         }
         .cell.empty { border-style: dotted; }
         .cell svg { width: {{ $qrSize }}%; height: auto; }
-        .cell .kode { font-size: 8pt; font-weight: bold; color: #1e4d8b; margin-top: 1mm; }
-        .cell .nama { font-size: 7pt; color: #374151; line-height: 1.15; margin-top: 0.5mm; }
+        .cell .wilayah {
+            font-size: 7.5pt; font-weight: bold; color: #1e4d8b;
+            margin-top: 1mm; width: 100%;
+            white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+        }
+        .cell .nama {
+            font-size: 7pt; color: #374151; line-height: 1.2;
+            margin-top: 0.5mm; width: 100%;
+            white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+        }
 
         @media print {
             .toolbar { display: none; }
@@ -97,7 +105,7 @@
                     @if ($family)
                         <div class="cell">
                             {!! QrCode::size(150)->generate($family->qr_token) !!}
-                            <div class="kode">{{ $family->kode_keluarga }}</div>
+                            <div class="wilayah">{{ $family->lingkungan?->nama ?? '-' }}</div>
                             <div class="nama">{{ $family->nama_kepala_keluarga }}</div>
                         </div>
                     @else
