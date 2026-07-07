@@ -91,7 +91,7 @@
             </div>
 
             {{-- Searchable Lingkungan --}}
-            <div x-data="{
+            <div wire:key="lingkungan-dropdown-{{ $filterWilayahId }}" x-data="{
                     open: false,
                     search: '',
                     options: [
@@ -136,10 +136,6 @@
                     </ul>
                 </div>
             </div>
-            <button wire:click="selectAllFiltered"
-                class="whitespace-nowrap text-sm border border-gray-200 text-gray-600 hover:bg-gray-50 rounded-lg px-3 py-2 transition-colors">
-                Pilih Semua Hasil Filter
-            </button>
         </div>
     </div>
 
@@ -147,7 +143,14 @@
     @if (count($selectedIds) > 0)
         <div class="bg-primary-50 border border-primary-100 rounded-xl p-4 mb-5">
             <div class="flex flex-wrap items-center gap-3">
-                <span class="text-sm font-medium text-primary-800">{{ count($selectedIds) }} keluarga terpilih</span>
+                <span class="text-sm font-medium text-primary-800">
+                    {{ count($selectedIds) }} dari {{ $this->filteredCount }} keluarga terpilih
+                </span>
+                @if (count($selectedIds) < $this->filteredCount)
+                    <button wire:click="selectAllFiltered" class="text-xs text-primary-600 hover:text-primary-800 underline font-medium">
+                        Pilih semua {{ $this->filteredCount }}
+                    </button>
+                @endif
                 <button wire:click="clearSelection" class="text-xs text-gray-500 hover:text-gray-700 underline">
                     Batalkan pilihan
                 </button>
@@ -243,9 +246,12 @@
                     <tr class="bg-gray-50 border-b border-gray-100">
                         <th class="px-4 py-3 w-8">
                             <input type="checkbox"
-                                @if (count($selectedIds) > 0 && empty(array_diff($this->families->pluck('id')->all(), $selectedIds)))checked @endif
-                                wire:click="{{ count($selectedIds) > 0 && empty(array_diff($this->families->pluck('id')->all(), $selectedIds)) ? 'clearSelection' : 'selectAllOnPage' }}"
-                                class="rounded border-gray-300 text-primary-600 focus:ring-primary-500">
+                                x-data
+                                x-effect="$el.indeterminate = {{ count($selectedIds) > 0 && count($selectedIds) < $this->filteredCount ? 'true' : 'false' }}"
+                                @checked(count($selectedIds) === $this->filteredCount && $this->filteredCount > 0)
+                                wire:click="{{ count($selectedIds) > 0 ? 'clearSelection' : 'selectAllFiltered' }}"
+                                class="rounded border-gray-300 text-primary-600 focus:ring-primary-500"
+                                title="{{ count($selectedIds) > 0 ? 'Batalkan semua pilihan' : 'Pilih semua ' . $this->filteredCount . ' keluarga' }}">
                         </th>
                         <th class="text-left text-xs font-semibold text-gray-500 uppercase tracking-wider px-4 py-3">Kode</th>
                         <th class="text-left text-xs font-semibold text-gray-500 uppercase tracking-wider px-4 py-3">Kepala Keluarga</th>
@@ -321,11 +327,28 @@
             </table>
         </div>
 
-        @if ($this->families->hasPages())
-            <div class="px-4 py-3 border-t border-gray-100">
+        <div class="px-4 py-3 border-t border-gray-100 flex items-center justify-between gap-4">
+            <div class="flex items-center gap-2 text-sm text-gray-500">
+                <span>Tampilkan</span>
+                <select wire:model.live="perPage"
+                    class="text-sm border border-gray-200 rounded-lg px-2 py-1 focus:outline-none focus:ring-2 focus:ring-primary-500">
+                    <option value="10">10</option>
+                    <option value="25">25</option>
+                    <option value="50">50</option>
+                    <option value="100">100</option>
+                </select>
+                <span>per halaman &bull;
+                    @if ($this->families->total() > 0)
+                        {{ $this->families->firstItem() }}–{{ $this->families->lastItem() }} dari {{ $this->families->total() }} data
+                    @else
+                        0 data
+                    @endif
+                </span>
+            </div>
+            <div>
                 {{ $this->families->links() }}
             </div>
-        @endif
+        </div>
     </div>
 
     {{-- ============ MODAL FORM TAMBAH/EDIT ============ --}}

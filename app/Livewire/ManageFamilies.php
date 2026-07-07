@@ -23,6 +23,7 @@ class ManageFamilies extends Component
     public string $search = '';
     public string $filterWilayahId = '';
     public string $filterLingkunganId = '';
+    public int $perPage = 25;
 
     // Form fields
     public ?int $editingId = null;
@@ -143,6 +144,11 @@ class ManageFamilies extends Component
         $this->resetPage();
     }
 
+    public function updatingPerPage(): void
+    {
+        $this->resetPage();
+    }
+
     public function updatingFilterWilayahId(): void
     {
         $this->filterLingkunganId = '';
@@ -179,7 +185,13 @@ class ManageFamilies extends Component
     {
         return $this->filteredQuery()
             ->orderByDesc('id')
-            ->paginate(10);
+            ->paginate($this->perPage);
+    }
+
+    #[Computed]
+    public function filteredCount(): int
+    {
+        return $this->filteredQuery()->count();
     }
 
     #[Computed]
