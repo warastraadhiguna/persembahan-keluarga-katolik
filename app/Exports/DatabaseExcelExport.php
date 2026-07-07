@@ -2,13 +2,10 @@
 
 namespace App\Exports;
 
-use Illuminate\Support\Facades\DB;
-use Maatwebsite\Excel\Concerns\Exportable;
 use Maatwebsite\Excel\Concerns\WithMultipleSheets;
 
 class DatabaseExcelExport implements WithMultipleSheets
 {
-    use Exportable;
 
     public function sheets(): array
     {
@@ -19,7 +16,7 @@ class DatabaseExcelExport implements WithMultipleSheets
                 'lingkungan_id', 'is_active', 'qr_token', 'created_at',
             ]),
             new DatabaseSheetExport('transactions', 'Transaksi', [
-                'id', 'family_id', 'petugas_id', 'tahun', 'bulan', 'tanggal',
+                'id', 'family_id', 'user_id', 'tahun', 'bulan', 'tanggal',
                 'nominal', 'catatan', 'is_void', 'voided_at', 'created_at',
             ]),
             new DatabaseSheetExport('wilayahs', 'Wilayah', [
