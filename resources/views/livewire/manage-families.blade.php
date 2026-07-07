@@ -246,12 +246,11 @@
                     <tr class="bg-gray-50 border-b border-gray-100">
                         <th class="px-4 py-3 w-8">
                             <input type="checkbox"
-                                x-data
-                                x-effect="$el.indeterminate = {{ count($selectedIds) > 0 && count($selectedIds) < $this->filteredCount ? 'true' : 'false' }}"
-                                @checked(count($selectedIds) === $this->filteredCount && $this->filteredCount > 0)
-                                wire:click="{{ count($selectedIds) > 0 ? 'clearSelection' : 'selectAllFiltered' }}"
-                                class="rounded border-gray-300 text-primary-600 focus:ring-primary-500"
-                                title="{{ count($selectedIds) > 0 ? 'Batalkan semua pilihan' : 'Pilih semua ' . $this->filteredCount . ' keluarga' }}">
+                                x-data="{ total: {{ $this->filteredCount }} }"
+                                x-bind:checked="$wire.selectedIds.length > 0 && $wire.selectedIds.length >= total"
+                                x-effect="$el.indeterminate = $wire.selectedIds.length > 0 && $wire.selectedIds.length < total"
+                                @click="$wire.selectedIds.length > 0 ? $wire.call('clearSelection') : $wire.call('selectAllFiltered')"
+                                class="rounded border-gray-300 text-primary-600 focus:ring-primary-500">
                         </th>
                         <th class="text-left text-xs font-semibold text-gray-500 uppercase tracking-wider px-4 py-3">Kode</th>
                         <th class="text-left text-xs font-semibold text-gray-500 uppercase tracking-wider px-4 py-3">Kepala Keluarga</th>
