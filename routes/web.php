@@ -43,6 +43,7 @@ Route::middleware(['auth', 'verified'])->group(function () {
         Route::get('backup', [BackupController::class, 'index'])->name('backup');
         Route::get('backup/download', [BackupController::class, 'download'])->name('backup.download');
         Route::get('backup/download/gz', [BackupController::class, 'downloadGz'])->name('backup.download.gz');
+        Route::get('backup/download/excel', [BackupController::class, 'downloadExcel'])->name('backup.download.excel');
     });
 
     // Manajemen

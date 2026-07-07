@@ -77,6 +77,21 @@
                 </div>
                 <span class="text-xs font-mono text-gray-400">.sql.gz</span>
             </a>
+
+            <a href="{{ route('backup.download.excel') }}"
+                class="flex items-center gap-4 p-4 rounded-xl border-2 border-green-100 hover:border-green-400 hover:bg-green-50 transition-all group">
+                <div class="w-10 h-10 rounded-lg bg-green-100 group-hover:bg-green-200 flex items-center justify-center shrink-0 transition-colors">
+                    <svg class="w-5 h-5 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                            d="M3 10h18M3 14h18M10 3v18M3 6a3 3 0 013-3h12a3 3 0 013 3v12a3 3 0 01-3 3H6a3 3 0 01-3-3V6z"/>
+                    </svg>
+                </div>
+                <div class="flex-1">
+                    <p class="text-sm font-semibold text-gray-800">Download Excel</p>
+                    <p class="text-xs text-gray-500 mt-0.5">Data keluarga, transaksi, wilayah, lingkungan & pengguna — tiap sheet terpisah. Mudah dibuka di Excel / Sheets.</p>
+                </div>
+                <span class="text-xs font-mono text-gray-400">.xlsx</span>
+            </a>
         </div>
 
         {{-- Peringatan --}}

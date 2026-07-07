@@ -2,14 +2,25 @@
 
 namespace App\Http\Controllers;
 
+use App\Exports\DatabaseExcelExport;
 use App\Services\AuditLogger;
 use Illuminate\Support\Facades\DB;
+use Maatwebsite\Excel\Facades\Excel;
 
 class BackupController extends Controller
 {
     public function index()
     {
         return view('backup');
+    }
+
+    public function downloadExcel()
+    {
+        $filename = 'backup-' . now()->format('Y-m-d_His') . '.xlsx';
+
+        AuditLogger::log('backup.downloaded', null, "Download backup Excel: {$filename}");
+
+        return Excel::download(new DatabaseExcelExport, $filename);
     }
 
     public function download()
