@@ -50,7 +50,7 @@
                     options: [
                         { value: '', label: 'Semua Wilayah' },
                         @foreach ($this->wilayahOptions as $w)
-                        { value: '{{ $w->id }}', label: @js($w->nama) },
+                        { value: '{{ $w->id }}', label: @js(($w->kode ? $w->kode . ' · ' : '') . $w->nama) },
                         @endforeach
                     ],
                     get selected() { return this.options.find(o => o.value == $wire.filterWilayahId) ?? this.options[0]; },
@@ -97,7 +97,7 @@
                     options: [
                         { value: '', label: 'Semua Lingkungan' },
                         @foreach ($this->lingkunganOptions as $l)
-                        { value: '{{ $l->id }}', label: @js($l->nama) },
+                        { value: '{{ $l->id }}', label: @js(($l->kode ? $l->kode . ' · ' : '') . $l->nama) },
                         @endforeach
                     ],
                     get selected() { return this.options.find(o => o.value == $wire.filterLingkunganId) ?? this.options[0]; },
@@ -283,19 +283,25 @@
                             </td>
                             <td class="px-4 py-3 font-mono text-xs text-primary-700 font-medium">{{ $family->kode_keluarga }}</td>
                             <td class="px-4 py-3 font-medium text-gray-800">{{ $family->nama_kepala_keluarga }}</td>
-                            <td class="px-4 py-3 font-mono text-gray-500">{{ $family->no_kk_masked }}</td>
+                            <td class="px-4 py-3 font-mono text-gray-500">{{ $family->no_kk ? $family->no_kk_masked : '—' }}</td>
                             <td class="px-4 py-3 text-gray-600">
                                 {{ $family->lingkungan?->nama ?: '-' }}
                                 <span class="text-gray-300">/</span>
                                 {{ $family->lingkungan?->wilayah?->nama ?: '-' }}
                             </td>
                             <td class="px-4 py-3">
-                                <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium
-                                    {{ $family->status_ekonomi === 'Pra Sejahtera' ? 'bg-amber-100 text-amber-700' : 'bg-emerald-100 text-emerald-700' }}">
-                                    {{ $family->status_ekonomi }}
-                                </span>
+                                @if ($family->status_ekonomi)
+                                    <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium
+                                        {{ $family->status_ekonomi === 'Pra Sejahtera' ? 'bg-amber-100 text-amber-700' : 'bg-emerald-100 text-emerald-700' }}">
+                                        {{ $family->status_ekonomi }}
+                                    </span>
+                                @else
+                                    <span class="text-gray-300 text-xs">—</span>
+                                @endif
                             </td>
-                            <td class="px-4 py-3 text-gray-600">{{ $family->jml_anggota }} orang</td>
+                            <td class="px-4 py-3 text-gray-600">
+                                {{ $family->jml_anggota ? $family->jml_anggota . ' orang' : '—' }}
+                            </td>
                             <td class="px-4 py-3">
                                 <button wire:click="confirmDeactivate({{ $family->id }})"
                                     class="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-xs font-medium transition-colors
@@ -383,15 +389,26 @@
             </div>
 
             <form wire:submit="save" class="px-6 py-5 space-y-4">
-                @if ($editingId)
-                    <div class="bg-gray-50 rounded-lg px-3 py-2 text-xs text-gray-500">
-                        Kode Keluarga: <span class="font-mono font-semibold text-gray-700">{{ \App\Models\Family::find($editingId)?->kode_keluarga }}</span>
+
+                <div class="grid grid-cols-2 gap-3">
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-1">
+                            Kode Keluarga
+                            @if (!$editingId) <span class="text-xs font-normal text-gray-400">(opsional)</span> @endif
+                        </label>
+                        <input wire:model="kode_keluarga" type="text" placeholder="{{ $editingId ? '' : 'Kosongkan = otomatis' }}"
+                            class="w-full text-sm font-mono border border-gray-200 rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-transparent @error('kode_keluarga') border-red-300 @enderror">
+                        @error('kode_keluarga') <p class="mt-1 text-xs text-red-600">{{ $message }}</p> @enderror
                     </div>
-                @else
-                    <p class="text-xs text-gray-400 bg-gray-50 rounded-lg px-3 py-2">
-                        Kode keluarga dan QR token akan dibuat otomatis.
-                    </p>
-                @endif
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-1">
+                            No. Kartu Keluarga <span class="text-xs font-normal text-gray-400">(opsional)</span>
+                        </label>
+                        <input wire:model="no_kk" type="text" placeholder="16 digit No. KK"
+                            class="w-full text-sm border border-gray-200 rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-transparent @error('no_kk') border-red-300 @enderror">
+                        @error('no_kk') <p class="mt-1 text-xs text-red-600">{{ $message }}</p> @enderror
+                    </div>
+                </div>
 
                 <div>
                     <label class="block text-sm font-medium text-gray-700 mb-1">Nama Kepala Keluarga</label>
@@ -400,25 +417,23 @@
                     @error('nama_kepala_keluarga') <p class="mt-1 text-xs text-red-600">{{ $message }}</p> @enderror
                 </div>
 
-                <div>
-                    <label class="block text-sm font-medium text-gray-700 mb-1">No. Kartu Keluarga</label>
-                    <input wire:model="no_kk" type="text" placeholder="16 digit No. KK"
-                        class="w-full text-sm border border-gray-200 rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-transparent @error('no_kk') border-red-300 @enderror">
-                    @error('no_kk') <p class="mt-1 text-xs text-red-600">{{ $message }}</p> @enderror
-                </div>
-
                 <div class="grid grid-cols-2 gap-3">
                     <div>
-                        <label class="block text-sm font-medium text-gray-700 mb-1">Status Ekonomi</label>
+                        <label class="block text-sm font-medium text-gray-700 mb-1">
+                            Status Ekonomi <span class="text-xs font-normal text-gray-400">(opsional)</span>
+                        </label>
                         <select wire:model="status_ekonomi"
                             class="w-full text-sm border border-gray-200 rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-transparent">
+                            <option value="">— Belum diisi —</option>
                             <option value="Sejahtera">Sejahtera</option>
                             <option value="Pra Sejahtera">Pra Sejahtera</option>
                         </select>
                     </div>
                     <div>
-                        <label class="block text-sm font-medium text-gray-700 mb-1">Jml. Anggota</label>
-                        <input wire:model="jml_anggota" type="number" min="1"
+                        <label class="block text-sm font-medium text-gray-700 mb-1">
+                            Jml. Anggota <span class="text-xs font-normal text-gray-400">(opsional)</span>
+                        </label>
+                        <input wire:model="jml_anggota" type="number" min="1" placeholder="—"
                             class="w-full text-sm border border-gray-200 rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-transparent @error('jml_anggota') border-red-300 @enderror">
                         @error('jml_anggota') <p class="mt-1 text-xs text-red-600">{{ $message }}</p> @enderror
                     </div>
@@ -528,8 +543,12 @@
         x-transition:leave-start="opacity-100" x-transition:leave-end="opacity-0"
         class="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/40"
         style="display:none">
-        <div @click.outside="show = false" class="bg-white rounded-xl shadow-xl w-full max-w-md">
-            <div class="flex items-center justify-between px-6 py-4 border-b border-gray-100">
+        <div @click.outside="show = false"
+            class="bg-white rounded-xl shadow-xl w-full flex flex-col transition-all duration-200
+                max-h-[90vh] {{ $importPengurusStep === 2 ? 'max-w-2xl' : 'max-w-md' }}">
+
+            {{-- Header — tetap di atas saat scroll --}}
+            <div class="flex items-center justify-between px-6 py-4 border-b border-gray-100 shrink-0">
                 <h3 class="font-semibold text-gray-800">Impor Data Keluarga</h3>
                 <button @click="show = false" class="text-gray-400 hover:text-gray-600 p-1 rounded">
                     <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -538,7 +557,28 @@
                 </button>
             </div>
 
+            {{-- Body: tab + content — area ini yang di-scroll --}}
+            <div class="flex-1 overflow-y-auto">
+
+            {{-- Tab switcher --}}
+            <div class="flex border-b border-gray-100 px-6 pt-1 gap-4 shrink-0">
+                <button type="button" wire:click="$set('importType', 'gereja')"
+                    class="py-2 text-sm font-medium border-b-2 transition-colors
+                        {{ $importType === 'gereja' ? 'border-primary-600 text-primary-700' : 'border-transparent text-gray-400 hover:text-gray-600' }}">
+                    Template Gereja
+                </button>
+                <button type="button" wire:click="$set('importType', 'pengurus')"
+                    class="py-2 text-sm font-medium border-b-2 transition-colors
+                        {{ $importType === 'pengurus' ? 'border-primary-600 text-primary-700' : 'border-transparent text-gray-400 hover:text-gray-600' }}">
+                    Data Pengurus
+                </button>
+            </div>
+
+            {{-- ===== TAB: GEREJA ===== --}}
+            @if ($importType === 'gereja')
             <div class="px-6 py-5 space-y-4">
+                <p class="text-xs text-gray-500">Import menggunakan template standar gereja (CSV/Excel dengan kolom header).</p>
+
                 <button wire:click="downloadTemplate"
                     class="w-full inline-flex items-center justify-center gap-2 text-sm border border-primary-200 text-primary-700 bg-primary-50 hover:bg-primary-100 rounded-lg px-4 py-2 transition-colors">
                     <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -550,7 +590,7 @@
                 <div>
                     <label class="block text-sm font-medium text-gray-700 mb-1">File Excel (.xlsx / .xls / .csv)</label>
                     <input wire:model="importFile" type="file" accept=".xlsx,.xls,.csv"
-                        class="w-full text-sm border border-gray-200 rounded-lg px-3 py-2 file:mr-3 file:py-1 file:px-3 file:rounded-md file:border-0 file:text-xs file:font-medium file:bg-primary-50 file:text-primary-700 focus:outline-none focus:ring-2 focus:ring-primary-500 @error('importFile') border-red-300 @enderror">
+                        class="w-full text-sm border border-gray-200 rounded-lg px-3 py-2 file:mr-3 file:py-1 file:px-3 file:rounded-md file:border-0 file:text-xs file:font-medium file:bg-primary-50 file:text-primary-700 focus:outline-none focus:ring-2 focus:ring-primary-500">
                     @error('importFile') <p class="mt-1 text-xs text-red-600">{{ $message }}</p> @enderror
                     <div wire:loading wire:target="importFile" class="mt-1 text-xs text-gray-400">Mengunggah file...</div>
                 </div>
@@ -562,7 +602,7 @@
                             <p class="text-amber-700">⚠ {{ $importResult['skippedDuplicate'] }} data dilewati (No. KK duplikat).</p>
                         @endif
                         @if ($importResult['skippedInvalid'] > 0)
-                            <p class="text-red-700">✗ {{ $importResult['skippedInvalid'] }} baris dilewati (data kosong/tidak valid).</p>
+                            <p class="text-red-700">✗ {{ $importResult['skippedInvalid'] }} baris tidak valid.</p>
                         @endif
                     </div>
                 @endif
@@ -579,6 +619,149 @@
                     </button>
                 </div>
             </div>
+            @endif
+
+            {{-- ===== TAB: PENGURUS ===== --}}
+            @if ($importType === 'pengurus')
+            <div class="px-6 py-5 space-y-4">
+
+                {{-- Step 1: Upload --}}
+                @if ($importPengurusStep === 1)
+                    <p class="text-xs text-gray-500">
+                        Import dari file Excel format pengurus (sheet per lingkungan, nama sheet = kode <span class="font-mono">WWLL</span>,
+                        kolom: NIKK | NMKK | LINGK | WIL).
+                    </p>
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-1">File Excel Pengurus (.xlsx / .xls)</label>
+                        <input wire:model="importPengurusFile" type="file" accept=".xlsx,.xls"
+                            class="w-full text-sm border border-gray-200 rounded-lg px-3 py-2 file:mr-3 file:py-1 file:px-3 file:rounded-md file:border-0 file:text-xs file:font-medium file:bg-primary-50 file:text-primary-700 focus:outline-none focus:ring-2 focus:ring-primary-500">
+                        @error('importPengurusFile') <p class="mt-1 text-xs text-red-600">{{ $message }}</p> @enderror
+                        <div wire:loading wire:target="importPengurusFile" class="mt-1 text-xs text-gray-400">Mengunggah file...</div>
+                    </div>
+                    <div class="flex gap-2 pt-2">
+                        <button type="button" @click="show = false"
+                            class="flex-1 text-sm border border-gray-200 text-gray-700 rounded-lg px-4 py-2 hover:bg-gray-50 transition-colors">
+                            Tutup
+                        </button>
+                        <button wire:click="parsePengurusFile" wire:loading.attr="disabled" wire:target="parsePengurusFile"
+                            class="flex-1 text-sm bg-primary-600 hover:bg-primary-700 text-white rounded-lg px-4 py-2 transition-colors disabled:opacity-50">
+                            <span wire:loading.remove wire:target="parsePengurusFile">Analisis File</span>
+                            <span wire:loading wire:target="parsePengurusFile">Membaca sheet...</span>
+                        </button>
+                    </div>
+                @endif
+
+                {{-- Step 2: Pilih sheet --}}
+                @if ($importPengurusStep === 2)
+                    <div class="flex items-center justify-between">
+                        <p class="text-sm font-medium text-gray-700">
+                            Ditemukan <span class="text-primary-700">{{ count($parsedSheets) }} sheet</span> — pilih yang akan diimpor:
+                        </p>
+                        <div class="flex gap-2 text-xs">
+                            <button type="button" wire:click="selectAllSheets" class="text-primary-600 hover:underline">Semua</button>
+                            <span class="text-gray-300">|</span>
+                            <button type="button" wire:click="deselectAllSheets" class="text-gray-500 hover:underline">Hapus pilihan</button>
+                        </div>
+                    </div>
+
+                    <div class="border border-gray-100 rounded-lg divide-y divide-gray-50">
+                        @foreach ($parsedSheets as $code => $sheet)
+                            <label class="flex items-center gap-3 px-3 py-2 hover:bg-gray-50 cursor-pointer">
+                                <input type="checkbox" wire:model.live="selectedSheets" value="{{ $code }}"
+                                    class="rounded border-gray-300 text-primary-600 focus:ring-primary-500">
+                                <div class="flex-1 min-w-0">
+                                    <span class="font-mono text-xs text-gray-400 mr-2">{{ $code }}</span>
+                                    <span class="text-sm text-gray-800">{{ $sheet['nama_wilayah'] }} / {{ $sheet['nama_lingkungan'] }}</span>
+                                </div>
+                                <span class="text-xs text-gray-400 shrink-0">{{ $sheet['count'] }} data</span>
+                            </label>
+                        @endforeach
+                    </div>
+
+                    <p class="text-xs text-gray-500">
+                        {{ count($selectedSheets) }} dari {{ count($parsedSheets) }} sheet dipilih
+                        &bull; estimasi {{ collect($parsedSheets)->only($selectedSheets)->sum('count') }} baris
+                    </p>
+
+                    <label class="flex items-start gap-2.5 cursor-pointer">
+                        <input type="checkbox" wire:model="clearBeforeImport"
+                            class="mt-0.5 rounded border-gray-300 text-red-600 focus:ring-red-500">
+                        <div>
+                            <span class="text-sm font-medium text-gray-700">Hapus semua data keluarga &amp; transaksi sebelum import</span>
+                            <p class="text-xs text-red-600 mt-0.5">Peringatan: tindakan ini tidak dapat dibatalkan.</p>
+                        </div>
+                    </label>
+
+                    <div class="flex gap-2 pt-1">
+                        <button type="button" wire:click="$set('importPengurusStep', 1)"
+                            class="text-sm border border-gray-200 text-gray-700 rounded-lg px-4 py-2 hover:bg-gray-50 transition-colors">
+                            Kembali
+                        </button>
+                        <button wire:click="importPengurus" wire:loading.attr="disabled" wire:target="importPengurus"
+                            @if(empty($selectedSheets)) disabled @endif
+                            class="flex-1 text-sm bg-primary-600 hover:bg-primary-700 disabled:bg-gray-300 text-white rounded-lg px-4 py-2 transition-colors">
+                            <span wire:loading.remove wire:target="importPengurus">Import {{ count($selectedSheets) }} Sheet</span>
+                            <span wire:loading wire:target="importPengurus">Mengimport data...</span>
+                        </button>
+                    </div>
+                @endif
+
+                {{-- Step 3: Hasil --}}
+                @if ($importPengurusStep === 3 && $importPengurusResult)
+                    <div class="rounded-lg bg-gray-50 border border-gray-100 px-4 py-4 space-y-1.5">
+                        <p class="text-green-700 font-medium text-sm">
+                            ✓ {{ $importPengurusResult['imported'] }} keluarga berhasil diimpor dari {{ $importPengurusResult['sheets'] }} sheet.
+                        </p>
+                        @if ($importPengurusResult['skipped'] > 0)
+                            <p class="text-amber-700 font-medium text-sm">
+                                ⚠ {{ $importPengurusResult['skipped'] }} baris dilewati:
+                            </p>
+                        @endif
+                        <p class="text-xs text-gray-400 pt-0.5">
+                            Wilayah dan lingkungan telah diperbarui dengan kode yang sesuai.
+                        </p>
+                    </div>
+
+                    @if (!empty($importPengurusResult['skipped_rows']))
+                        <div class="border border-amber-100 rounded-lg overflow-hidden">
+                            <div class="bg-amber-50 px-3 py-2 text-xs font-semibold text-amber-700 border-b border-amber-100">
+                                Detail baris yang dilewati
+                            </div>
+                            <table class="w-full text-xs">
+                                <thead>
+                                    <tr class="bg-gray-50 border-b border-gray-100">
+                                        <th class="text-left px-3 py-1.5 text-gray-500 font-medium">Sheet</th>
+                                        <th class="text-left px-3 py-1.5 text-gray-500 font-medium">Baris</th>
+                                        <th class="text-left px-3 py-1.5 text-gray-500 font-medium">Kode (NIKK)</th>
+                                        <th class="text-left px-3 py-1.5 text-gray-500 font-medium">Nama (NMKK)</th>
+                                        <th class="text-left px-3 py-1.5 text-gray-500 font-medium">Alasan</th>
+                                    </tr>
+                                </thead>
+                                <tbody class="divide-y divide-gray-50">
+                                    @foreach ($importPengurusResult['skipped_rows'] as $skipped)
+                                        <tr class="hover:bg-amber-50/40">
+                                            <td class="px-3 py-1.5 font-mono text-gray-400">{{ $skipped['sheet'] }}</td>
+                                            <td class="px-3 py-1.5 text-gray-400">{{ $skipped['row'] }}</td>
+                                            <td class="px-3 py-1.5 font-mono text-gray-700">{{ $skipped['kode'] }}</td>
+                                            <td class="px-3 py-1.5 text-gray-700">{{ $skipped['nama'] }}</td>
+                                            <td class="px-3 py-1.5 text-amber-600">{{ $skipped['reason'] }}</td>
+                                        </tr>
+                                    @endforeach
+                                </tbody>
+                            </table>
+                        </div>
+                    @endif
+
+                    <button type="button" @click="show = false"
+                        class="w-full text-sm bg-primary-600 hover:bg-primary-700 text-white rounded-lg px-4 py-2 transition-colors">
+                        Selesai
+                    </button>
+                @endif
+
+            </div>
+            @endif
+
+            </div>{{-- /flex-1 overflow-y-auto --}}
         </div>
     </div>
 

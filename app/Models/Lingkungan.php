@@ -7,7 +7,7 @@ use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 
-#[Fillable(['wilayah_id', 'nama'])]
+#[Fillable(['kode', 'wilayah_id', 'nama'])]
 class Lingkungan extends Model
 {
     public function wilayah(): BelongsTo

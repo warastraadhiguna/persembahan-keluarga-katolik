@@ -8,9 +8,11 @@ return new class extends Migration
 {
     public function up(): void
     {
-        Schema::table('print_settings', function (Blueprint $table) {
-            $table->unsignedTinyInteger('qr_size')->default(55)->after('gap'); // persen (%)
-        });
+        if (! Schema::hasColumn('print_settings', 'qr_size')) {
+            Schema::table('print_settings', function (Blueprint $table) {
+                $table->unsignedTinyInteger('qr_size')->default(55)->after('gap');
+            });
+        }
     }
 
     public function down(): void

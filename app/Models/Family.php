@@ -30,7 +30,7 @@ class Family extends Model
     {
         static::creating(function (Family $family) {
             if (empty($family->kode_keluarga)) {
-                $family->kode_keluarga = self::generateKodeKeluarga();
+                $family->kode_keluarga = self::generateKodeKeluarga($family->lingkungan_id);
             }
             if (empty($family->qr_token)) {
                 $family->qr_token = self::generateQrToken();
@@ -38,21 +38,52 @@ class Family extends Model
         });
     }
 
-    public static function generateKodeKeluarga(): string
+    public static function generateKodeKeluarga(?int $lingkunganId = null): string
     {
+        if ($lingkunganId) {
+            $lingkungan = Lingkungan::with('wilayah')->find($lingkunganId);
+            if ($lingkungan?->kode && $lingkungan->wilayah?->kode) {
+                return self::generateKodeForLingkungan($lingkungan);
+            }
+        }
+
+        // Fallback ke format lama KK-XXXXX
         $last = self::query()
             ->where('kode_keluarga', 'like', 'KK-%')
             ->orderByDesc('id')
             ->value('kode_keluarga');
 
         $nextNumber = $last ? ((int) substr($last, 3)) + 1 : 1;
-
         $kode = sprintf('KK-%05d', $nextNumber);
 
-        // Pastikan unik meski ada race condition / gap
         while (self::where('kode_keluarga', $kode)->exists()) {
             $nextNumber++;
             $kode = sprintf('KK-%05d', $nextNumber);
+        }
+
+        return $kode;
+    }
+
+    private static function generateKodeForLingkungan(Lingkungan $lingkungan): string
+    {
+        $prefix = $lingkungan->wilayah->kode . '.' . $lingkungan->kode . '.';
+
+        $maxNN = self::where('lingkungan_id', $lingkungan->id)
+            ->where('kode_keluarga', 'like', $prefix . '%')
+            ->get()
+            ->max(function ($f) use ($prefix) {
+                $nn = substr($f->kode_keluarga, \strlen($prefix));
+                return is_numeric($nn) ? (int) $nn : 0;
+            }) ?? 0;
+
+        $next = $maxNN + 1;
+        $nn   = $next < 100 ? sprintf('%02d', $next) : (string) $next;
+        $kode = $prefix . $nn;
+
+        while (self::where('kode_keluarga', $kode)->exists()) {
+            $next++;
+            $nn   = $next < 100 ? sprintf('%02d', $next) : (string) $next;
+            $kode = $prefix . $nn;
         }
 
         return $kode;
