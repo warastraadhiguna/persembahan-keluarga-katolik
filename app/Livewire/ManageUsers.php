@@ -89,7 +89,7 @@ class ManageUsers extends Component
         $this->editingId = $id;
         $this->name      = $user->name;
         $this->email     = $user->email;
-        $this->role      = $user->role->value;
+        $this->role      = $user->role?->value ?? 'operator';
         $this->is_active = $user->is_active;
         $this->showFormModal = true;
         $this->resetErrorBag();

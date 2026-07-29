@@ -80,16 +80,16 @@
                             </td>
                             <td class="px-4 py-3 text-gray-600">{{ $user->email }}</td>
                             <td class="px-4 py-3">
-                                @php $roleColor = match($user->role->value) {
-                                    'admin'     => 'bg-purple-100 text-purple-700',
-                                    'operator'  => 'bg-blue-100 text-blue-700',
-                                    'bendahara' => 'bg-amber-100 text-amber-700',
+                                @php $roleColor = match($user->role?->value) {
+                                    'admin'       => 'bg-purple-100 text-purple-700',
+                                    'operator'    => 'bg-blue-100 text-blue-700',
+                                    'bendahara'   => 'bg-amber-100 text-amber-700',
                                     'pimpinan'    => 'bg-emerald-100 text-emerald-700',
                                     'sekretariat' => 'bg-violet-100 text-violet-700',
                                     default       => 'bg-gray-100 text-gray-600',
                                 }; @endphp
                                 <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium {{ $roleColor }}">
-                                    {{ $user->role->label() }}
+                                    {{ $user->role?->label() ?? '-' }}
                                 </span>
                             </td>
                             <td class="px-4 py-3">
