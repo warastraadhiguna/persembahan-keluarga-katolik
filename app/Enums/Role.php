@@ -4,18 +4,20 @@ namespace App\Enums;
 
 enum Role: string
 {
-    case Admin     = 'admin';
-    case Operator  = 'operator';
-    case Bendahara = 'bendahara';
-    case Pimpinan  = 'pimpinan';
+    case Admin       = 'admin';
+    case Operator    = 'operator';
+    case Bendahara   = 'bendahara';
+    case Pimpinan    = 'pimpinan';
+    case Sekretariat = 'sekretariat';
 
     public function label(): string
     {
         return match($this) {
-            self::Admin     => 'Admin',
-            self::Operator  => 'Operator',
-            self::Bendahara => 'Bendahara',
-            self::Pimpinan  => 'Pimpinan Gereja',
+            self::Admin       => 'Admin',
+            self::Operator    => 'Operator',
+            self::Bendahara   => 'Bendahara',
+            self::Pimpinan    => 'Pimpinan Gereja',
+            self::Sekretariat => 'Sekretariat',
         };
     }
 
@@ -42,7 +44,7 @@ enum Role: string
     /** Role yang bisa diatur hak aksesnya lewat halaman pengaturan (admin selalu akses penuh). */
     public static function configurableRoles(): array
     {
-        return [self::Operator, self::Bendahara, self::Pimpinan];
+        return [self::Operator, self::Bendahara, self::Pimpinan, self::Sekretariat];
     }
 
     public function canAccess(string $menu): bool

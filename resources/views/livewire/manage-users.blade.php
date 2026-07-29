@@ -49,6 +49,7 @@
                 <option value="operator">Operator</option>
                 <option value="bendahara">Bendahara</option>
                 <option value="pimpinan">Pimpinan Gereja</option>
+                <option value="sekretariat">Sekretariat</option>
             </select>
         </div>
     </div>
@@ -83,8 +84,9 @@
                                     'admin'     => 'bg-purple-100 text-purple-700',
                                     'operator'  => 'bg-blue-100 text-blue-700',
                                     'bendahara' => 'bg-amber-100 text-amber-700',
-                                    'pimpinan'  => 'bg-emerald-100 text-emerald-700',
-                                    default     => 'bg-gray-100 text-gray-600',
+                                    'pimpinan'    => 'bg-emerald-100 text-emerald-700',
+                                    'sekretariat' => 'bg-violet-100 text-violet-700',
+                                    default       => 'bg-gray-100 text-gray-600',
                                 }; @endphp
                                 <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium {{ $roleColor }}">
                                     {{ $user->role->label() }}
@@ -187,6 +189,7 @@
                         <option value="operator">Operator</option>
                         <option value="bendahara">Bendahara</option>
                         <option value="pimpinan">Pimpinan Gereja</option>
+                        <option value="sekretariat">Sekretariat</option>
                     </select>
                     @error('role') <p class="mt-1 text-xs text-red-600">{{ $message }}</p> @enderror
                 </div>
